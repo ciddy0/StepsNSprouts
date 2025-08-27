@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "This app needs access to health data to track your steps.",
+        "NSHealthUpdateUsageDescription": "This app may update health data."
+      }
     },
     "android": {
       "adaptiveIcon": {
