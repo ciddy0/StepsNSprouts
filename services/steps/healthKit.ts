@@ -23,12 +23,12 @@ import AppleHealthKit, {
 
 /**
  * Step data structure returned by HealthKit
- * Used for consistent data format 
+ * Used for consistent data format across the application
  * 
  * @interface StepData
  * @property {number} value - The step count value
- * @method initHealthKit - Initialize the health service with perms
- * @method getTodaysSteps - Retrieve step count for the current day
+ * @property {string} date - ISO date string when steps were recorded
+ * @property {string} source - Data source identifier (e.g., 'HealthKit', 'DummyData')
  */
  export interface StepData {
     value: number;
@@ -36,6 +36,14 @@ import AppleHealthKit, {
     source: string;
  }
 
+ /**
+ * HealthKit service interface
+ * Defines the contract for health data services (real HealthKit or dummy data)
+ * 
+ * @interface HealthKitService
+ * @method initializeHealthKit - Initialize the health service with perms
+ * @method getTodaysSteps - Retrieve step count for the current day
+ */
  export interface HealthKitService {
     initializeHealthKit: () => Promise<boolean>;
     getTodaysSteps: () => Promise<number>;
