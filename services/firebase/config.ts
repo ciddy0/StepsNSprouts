@@ -50,6 +50,6 @@ if (Platform.OS === "web") {
 const db: Firestore = getFirestore(app);
 const storage: FirebaseStorage = getStorage(app);
 
-//Exports the initialized Firebase app and auth instance for use in the app
+//Exports the initialized instances for use in the app
 export { app, auth, db, storage };
 
