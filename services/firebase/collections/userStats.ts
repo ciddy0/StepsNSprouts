@@ -1,6 +1,0 @@
-export interface userStats {
-    date: Date;
-    stepGoal: number;
-    steps: number;
-    userId: string;
-}
