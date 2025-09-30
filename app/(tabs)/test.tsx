@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { ensureHealthServiceInitialized, getTodaysProgress, getTodaysSteps } from '../../services/steps';
 
