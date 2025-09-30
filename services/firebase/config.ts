@@ -1,14 +1,17 @@
-// Initialize Firebase
+//Initialize Firebase
 import { getApp, getApps, initializeApp } from "firebase/app";
-// Authentication modules from Firebase SDK
+//Authentication modules from Firebase SDK
 import { browserLocalPersistence, getAuth, setPersistence, type Auth } from "firebase/auth";
-// React Native specific authentication persistence
+//React Native specific authentication persistence
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeAuth } from "firebase/auth";
 import { getReactNativePersistence } from "firebase/auth/react-native";
 import { Platform } from "react-native";
+//Firestore and Storage modules from Firebase
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
-// Firebase configuration from environment variables in Expo (.env)
+//Firebase configuration from environment variables in Expo (.env)
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -19,28 +22,34 @@ const firebaseConfig = {
     measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Prevents re-initialization of the app
+//Prevents re-initialization of the app
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// Creates a variable to hold the auth instance
+//Creates a variable to hold the auth instance
 let auth: Auth;
 
-// Uses platform specific code to initialize the auth instance
+//Uses platform specific code to initialize the auth instance
 if (Platform.OS === "web") {
     auth = getAuth(app);
-    // Set persistence to local (default is session)
+    //Set persistence to local (default is session)
     setPersistence(auth, browserLocalPersistence);
 } else {
-    // Uses AsyncStorage for persistence
+    //Uses AsyncStorage for persistence
     try {
-        // Attempts to initialize auth with React Native persistence
+        //Attempts to initialize auth with React Native persistence
         auth = initializeAuth(app, {
             persistence: getReactNativePersistence(AsyncStorage),
         });
     } catch (error) {
-        // If already initialized, get the existing instance
+        //If already initialized, get the existing instance
         auth = getAuth(app);
     }
 }
 
-export { app, auth };
+//Initialize Firestore and Storage instances
+const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
+
+//Exports the initialized Firebase app and auth instance for use in the app
+export { app, auth, db, storage };
+
