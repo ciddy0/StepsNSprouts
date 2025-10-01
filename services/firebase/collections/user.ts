@@ -8,3 +8,9 @@ export interface User {
     weight: number;
     stepGoal: number;
 }
+
+/**
+ * a user. ye
+ * has attribute step goal (most recent/updated step goal)
+ * and other attributes (self-explannatory)
+ */
