@@ -7,6 +7,8 @@ export interface User {
     age: number;
     weight: number;
     stepGoal: number;
+    pomes: number; // currency
+    proiflePicture: string; // base 64
 }
 
 /**
