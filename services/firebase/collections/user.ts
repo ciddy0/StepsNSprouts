@@ -4,11 +4,9 @@ export interface User {
     lastName: string;
     email: string;
     password: number;
-    age: number;
-    weight: number;
     stepGoal: number;
     pomes: number; // currency
-    proiflePicture: string; // base 64
+    profilePicture: string; // base 64
 }
 
 /**
