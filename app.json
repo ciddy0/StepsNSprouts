@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.csulb.stepsnsprouts",
       "supportsTablet": true,
       "infoPlist": {
         "NSHealthShareUsageDescription": "This app needs access to health data to track your steps.",
