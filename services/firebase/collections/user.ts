@@ -2,8 +2,8 @@ export interface User {
     id: string;
     firstName: string;
     lastName: string;
+    username: string;
     email: string;
-    password: number;
     stepGoal: number;
     pomes: number; // currency
     profilePicture: string; // base 64
