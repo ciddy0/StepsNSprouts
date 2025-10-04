@@ -1,7 +1,8 @@
-
+// services/firebase/auth.ts
 //Imports the Firebase authentication instance
 import { auth } from './config';
 //Imports necessary functions and types from Firebase
+import * as Google from 'expo-auth-session/providers/google';
 import {
     createUserWithEmailAndPassword,
     GoogleAuthProvider,
@@ -36,4 +37,11 @@ export const listenToAuth = (callback: (user: User | null) => void) => {
 export const signInWithGoogleIdToken = (idToken: string) => {
     const googleCredential = GoogleAuthProvider.credential(idToken);
     return signInWithCredential(auth, googleCredential);
+}
+
+// Export Google auth hook config
+export const useGoogleAuth = () => {
+    return Google.useIdTokenAuthRequest({
+        clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+    });
 }
