@@ -13,7 +13,14 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSHealthShareUsageDescription": "This app needs access to health data to track your steps.",
-        "NSHealthUpdateUsageDescription": "This app may update health data."
+        "NSHealthUpdateUsageDescription": "This app may update health data.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.741425516223-8d625nceuomkvvc90r2pgtg5bg95el8k"
+            ]
+          }
+        ]
       }
     },
     "android": {

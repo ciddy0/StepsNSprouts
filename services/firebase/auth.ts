@@ -2,7 +2,9 @@
 //Imports the Firebase authentication instance
 import { auth } from './config';
 //Imports necessary functions and types from Firebase
+import { makeRedirectUri } from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
+
 import {
     createUserWithEmailAndPassword,
     GoogleAuthProvider,
@@ -39,9 +41,15 @@ export const signInWithGoogleIdToken = (idToken: string) => {
     return signInWithCredential(auth, googleCredential);
 }
 
-// Export Google auth hook config
 export const useGoogleAuth = () => {
+    // Force using Expo's auth proxy
+    const redirectUri = makeRedirectUri({
+        native: 'https://auth.expo.io/@ciddy0/StepsNSprouts',
+    });
+
     return Google.useIdTokenAuthRequest({
-        clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+        clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+        iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+        redirectUri,
     });
 }
