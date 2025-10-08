@@ -3,6 +3,7 @@ import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
+
   const { user, loading } = useAuth();
 
   console.log('Index screen - loading:', loading, 'user:', user?.email);
@@ -21,3 +22,5 @@ export default function Index() {
 
   return <Redirect href="/(auth)/signup" />;
 }
+
+

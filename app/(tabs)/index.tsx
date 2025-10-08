@@ -2,8 +2,11 @@ import { useAuth } from '@/context/AuthContext';
 import { getUserDocument } from '@/services/api/userService';
 import { User } from '@/services/firebase/collections/user';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+
+//added to fix useFocusEffect error
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
@@ -27,6 +30,25 @@ export default function HomeScreen() {
 
     fetchUserData();
   }, [user]);
+  
+  // Refetch user data every time the screen comes into focus (after returning from /profile-settings)
+  useFocusEffect(
+    useCallback(() => {
+      const refetchOnFocus = async () => {
+        if (user) {
+          try {
+            const data = await getUserDocument(user.uid);
+            setUserData(data);
+          } catch (error) {
+            console.error('Error fetching user data on focus:', error);
+          }
+        }
+      };
+
+      refetchOnFocus();
+      // No cleanup needed
+    }, [user])
+  );
 
   const handleLogout = async () => {
     setLoading(true);
@@ -70,6 +92,11 @@ export default function HomeScreen() {
           <Text>Step Goal: {userData.stepGoal}</Text>
           <Text>Pomes Currency: {userData.pomes}</Text>
           <Text>Profile Picture: {userData.profilePicture || 'Not set'}</Text>
+
+          {/* navigate to profile settings */}
+          <TouchableOpacity onPress={() => router.push('/profile-settings')} style={{ marginTop: 12 }}>
+            <Text style={{ textDecorationLine: 'underline' }}>Edit Profile</Text>
+          </TouchableOpacity>
         </View>
       )}
 
