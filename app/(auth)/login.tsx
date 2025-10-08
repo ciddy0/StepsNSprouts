@@ -1,8 +1,9 @@
 // app/(auth)/login.tsx
 import { useAuth } from '@/context/AuthContext';
 import { signInWithGoogleIdToken, useGoogleAuth } from '@/services/firebase/auth';
+import { Audio } from 'expo-av';
 import { Link, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const ERROR = 'Error';
@@ -11,9 +12,35 @@ export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const soundRef = useRef<Audio.Sound | null>(null);
     
     const { signIn } = useAuth();
     const [request, response, promptAsync] = useGoogleAuth();
+
+    // Play background music when component mounts
+    useEffect(() => {
+        const playBackgroundMusic = async () => {
+            try {
+                const { sound } = await Audio.Sound.createAsync(
+                    require('../../assets/music/lofi-background-music-326931.mp3'), // Change to your music file path
+                    { shouldPlay: true, isLooping: true, volume: 0.3 }
+                );
+                soundRef.current = sound;
+            } catch (error) {
+                console.log('Error loading music:', error);
+            }
+        };
+
+        playBackgroundMusic();
+
+        // Cleanup: stop music when component unmounts
+        return () => {
+            if (soundRef.current) {
+                soundRef.current.stopAsync();
+                soundRef.current.unloadAsync();
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (response?.type === 'success') {
@@ -21,10 +48,15 @@ export default function LoginScreen() {
             handleGoogleSignIn(id_token)
         }
     })
+
     const handleGoogleSignIn = async (idToken: string) => {
         setLoading(true);
         try {
             await signInWithGoogleIdToken(idToken);
+            // Stop music when navigating away
+            if (soundRef.current) {
+                await soundRef.current.stopAsync();
+            }
             router.replace('/(tabs)');
         } catch (error) {
             Alert.alert('Google Sign-In Failed', 'Unable to sign in with Google')
@@ -32,6 +64,7 @@ export default function LoginScreen() {
             setLoading(false);
         }
     };
+
     const handleLogin = async () => {
         if (!email || !password) {
             Alert.alert(ERROR, 'Please fill in all fields');
@@ -42,6 +75,10 @@ export default function LoginScreen() {
 
         try {
             await signIn(email, password);
+            // Stop music when navigating away
+            if (soundRef.current) {
+                await soundRef.current.stopAsync();
+            }
             router.replace('/(tabs)');
         } catch (error: any) {
             Alert.alert('Login Failed', 'Invalid email or password');
