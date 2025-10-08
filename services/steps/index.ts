@@ -4,6 +4,8 @@ import { Platform } from 'react-native';
 import { dummyHealthService } from './fallback';
 import type { HealthKitService } from './healthKit';
 import { healthKitService } from './healthKit';
+// Utility functions for step to pomes conversion
+import { STEPS_PER_POME, stepsRemainder, stepsToPomes } from '@/services/game/currency'; // NEW
 
 // detect if app is in Expo go or dev environment
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -57,6 +59,29 @@ export const getTodaysProgress = async (goal: number = 10000) => {
         remaining: Math.max(goal - steps, 0),
     };
 };
+
+/* 
+// Example usag to call this function and get today's steps and pomes
+// can be used like this in any component
+const { steps, pomes } = await getTodaysPomes();
+*/
+// Convenience function to get today's pomes and related info
+export async function getTodaysPomes(): Promise<{
+  steps: number;
+  pomes: number;
+  remainder: number;
+  stepsPerPome: number;
+}> {
+    // Get today's steps
+  const steps = await getTodaysSteps();
+  return {
+    steps,
+    pomes: stepsToPomes(steps),
+    remainder: stepsRemainder(steps),
+    stepsPerPome: STEPS_PER_POME,
+  };
+}
+
 
 // Initialize the health service when module loads
 let isInitialized = false;
