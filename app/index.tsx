@@ -1,26 +1,37 @@
+import { useEffect, useState } from "react";
+import LoadingScreen from "../components/LoadingScreen";
+
 import { useAuth } from '@/context/AuthContext';
 import { Redirect } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
 
   const { user, loading } = useAuth();
+ const [showSplash, setShowSplash] = useState(true);
+
+  // Delay logic
+  const [holdSplash, setHoldSplash] = useState(true);
+  useEffect(() => {
+  const t = setTimeout(() => setHoldSplash(false), 2500); // ADJUST TIME HERE
+  return () => clearTimeout(t);}, []);
+
+  const [splashGone, setSplashGone] = useState(false);
+  const shouldShowSplash = loading || holdSplash;
 
   console.log('Index screen - loading:', loading, 'user:', user?.email);
 
-  if (loading) {
+  if (!splashGone) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-      </View>
+      <LoadingScreen
+        visible={shouldShowSplash}
+        onHidden={() => setSplashGone(true)}   // called after fade-out
+        inDuration={400}
+        outDuration={400}
+      />
     );
   }
 
-  if (user) {
-    return <Redirect href="/(tabs)" />;
-  }
-
-  return <Redirect href="/(auth)/signup" />;
+  return <Redirect href="/home" />;
 }
 
 
