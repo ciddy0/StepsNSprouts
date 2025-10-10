@@ -17,6 +17,8 @@ import {
 
 export const options = { headerShown: false };
 const soundRef = useRef<Audio.Sound | null>(null);
+const clickSoundRef = useRef<Audio.Sound | null>(null);
+
 useEffect(() => {
   const playHomescreenMusic = async() => {
     try {
@@ -39,6 +41,23 @@ useEffect(() => {
     }
   };
 }, []);
+
+const playClickSound = async () => {
+  try {
+    if (clickSoundRef.current) {
+      await clickSoundRef.current.stopAsync();
+      await clickSoundRef.current.unloadAsync();
+    }
+    
+    const { sound } = await Audio.Sound.createAsync(
+      require('../assets/music/menu-button-click.mp3'),
+      { shouldPlay: true, volume: 0.8 }
+    );
+    clickSoundRef.current = sound;
+  } catch(error) {
+    console.log('Error playing click sound', error);
+  }
+};
 
 function PressableScale({
   onPress,
@@ -69,6 +88,16 @@ export default function Home() {
   const { width } = useWindowDimensions();
   const pixelArtWebOnly = Platform.OS === "web" && width >= 768 ? ({ imageRendering: "pixelated" } as any) : undefined;
 
+  const handleLoginPress = async () => {
+    await playClickSound();
+    router.push("/(auth)/login");
+  };
+
+  const handleSignupPress = async () => {
+    await playClickSound();
+    router.push("/(auth)/signup");
+  };
+
   return (
     <View style={styles.screen}>
         <ImageBackground
@@ -94,7 +123,7 @@ export default function Home() {
 
             {/* Buttons */}
             <View style={styles.buttonsRow}>
-              <PressableScale onPress={() => router.push("/(auth)/login")}>
+              <PressableScale onPress={handleLoginPress}>
                 <ImageBackground
                   source={require("../assets/maiArt/button_yellow.png")}
                   resizeMode="contain"
@@ -105,7 +134,7 @@ export default function Home() {
                 </ImageBackground>
               </PressableScale>
 
-              <PressableScale onPress={() => router.push("/(auth)/signup")}>
+              <PressableScale onPress={handleSignupPress}>
                 <ImageBackground
                   source={require("../assets/maiArt/button_yellow.png")}
                   resizeMode="contain"
