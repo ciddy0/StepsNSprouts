@@ -1,22 +1,44 @@
 // app/home.tsx
+import { AnimatedDuck } from "@/components/AnimatedDuck";
+import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
-import React, { useRef } from "react";
-
+import React, { useEffect, useRef } from "react";
 import {
-    Animated,
-    Image,
-    ImageBackground,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-    useWindowDimensions,
+  Animated,
+  Image,
+  ImageBackground,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
 } from "react-native";
 
 export const options = { headerShown: false };
+const soundRef = useRef<Audio.Sound | null>(null);
+useEffect(() => {
+  const playHomescreenMusic = async() => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../assets/music/lofi-background-music-326931.mp3'),
+        { shouldPlay: true, isLooping: true, volume: 0.3}
+      );
+      soundRef.current = sound;
+    } catch(error) {
+      console.log('Error Loading Music', error)
+    }
+  };
+  playHomescreenMusic();
 
-
+  // Cleanup: stop music when component unmounts
+  return () => {
+    if (soundRef.current) {
+      soundRef.current.stopAsync();
+      soundRef.current.unloadAsync();
+    }
+  };
+}, []);
 
 function PressableScale({
   onPress,
@@ -64,6 +86,11 @@ export default function Home() {
               resizeMode="contain"
               style={styles.title}
             />
+            
+            {/* Duck */}
+            <View style={styles.duckContainer}>
+              <AnimatedDuck />
+            </View>
 
             {/* Buttons */}
             <View style={styles.buttonsRow}>
@@ -78,7 +105,7 @@ export default function Home() {
                 </ImageBackground>
               </PressableScale>
 
-              <PressableScale onPress={() => router.push("/(auth)/signup")} style={{ marginLeft: 16 }}>
+              <PressableScale onPress={() => router.push("/(auth)/signup")}>
                 <ImageBackground
                   source={require("../assets/maiArt/button_yellow.png")}
                   resizeMode="contain"
@@ -107,10 +134,9 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   center: {
-    flex: 1,
+    width: "100%",
+    maxWidth: 440,
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
   },
   content: {
     width: "100%",
@@ -118,18 +144,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    width: 360,   // adjust to asset
-    height: 160,  // adjust to asset
+    width: 360,   
+    height: 160,  
     marginBottom: 320,
+  },
+  duckContainer: {
+    position: "absolute",
+    top: "95%",
+    left: "50%",
+    transform: [{ translateX: -32 }, { translateY: -100 }], 
+    zIndex: 10,
   },
   buttonsRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 120,
+    gap: 16,
+    width: "100%",
   },
   button: {
-    width: 180,   // button
+    width: 180,   
     height: 72,
     alignItems: "center",
     justifyContent: "center",
