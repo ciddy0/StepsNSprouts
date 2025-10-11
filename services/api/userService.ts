@@ -1,11 +1,13 @@
 import { User as FirebaseUser } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, query, updateDoc, where, writeBatch } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where, writeBatch } from "firebase/firestore";
 import { Garden } from "../firebase/collections/garden";
 import { Tree } from "../firebase/collections/tree";
 import { User } from "../firebase/collections/user";
+import { UserStat } from "../firebase/collections/userStat";
 import { db } from "../firebase/config";
 
 /**
+ * 
  * Check if username is already taken
  */
 export async function isUsernameTaken(username: string): Promise<boolean> {
@@ -102,4 +104,29 @@ export async function updateUser(user: User) {
         pomes: user.pomes,
         profilePicture: user.profilePicture,
     });
+}
+
+/**
+ * Get user stat document
+ */
+export async function getUserStatsDocument(userId: string, date: Date): Promise<UserStat | null> {
+    const q = query(
+      collection(db, "userStat"),
+      where("userId", "==", userId),
+      where("date", "==", date)
+    );
+    const docSnap = await getDocs(q);
+
+    if (!docSnap.empty) {
+        return docSnap.docs[0].data() as UserStat;
+    }
+    return null;
+}
+
+export async function createUserStat(userId: string, date: Date, accomplishedGoal: boolean) {
+  const userRef = addDoc(collection(db, "userStat"), {
+    date: date,
+    userId: userId,
+    accomplishedGoal: accomplishedGoal
+  });
 }
