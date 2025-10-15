@@ -1,16 +1,21 @@
-import { Link } from "expo-router";
-import React, { useRef, useState } from "react";
+import { useAuth } from '@/context/AuthContext';
+import { signInWithGoogleIdToken, useGoogleAuth } from '@/services/firebase/auth';
+import { Audio } from 'expo-av';
+import { Link, router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Image,
-    ImageBackground,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-    useWindowDimensions,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Image,
+  ImageBackground,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions,
 } from "react-native";
 
 export const options = { headerShown: false };
@@ -29,18 +34,21 @@ function PressableScale({
   onPress,
   children,
   style,
+  disabled,
 }: {
   onPress: () => void;
   children: React.ReactNode;
   style?: any;
+  disabled?: boolean;
 }) {
   const s = useRef(new Animated.Value(1)).current;
   return (
     <Animated.View style={[{ transform: [{ scale: s }] }, style]}>
       <Pressable
         onPress={onPress}
-        onPressIn={() => Animated.spring(s, { toValue: 0.96, useNativeDriver: true }).start()}
-        onPressOut={() => Animated.spring(s, { toValue: 1, useNativeDriver: true }).start()}
+        disabled={disabled}
+        onPressIn={() => !disabled && Animated.spring(s, { toValue: 0.96, useNativeDriver: true }).start()}
+        onPressOut={() => !disabled && Animated.spring(s, { toValue: 1, useNativeDriver: true }).start()}
       >
         {children}
       </Pressable>
@@ -53,8 +61,81 @@ export default function LoginScreen() {
   const pixelArtWebOnly =
     Platform.OS === "web" && width >= 768 ? ({ imageRendering: "pixelated" } as any) : undefined;
 
-  const [username, setUsername] = useState("");
-  const [pw, setPw] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const soundRef = useRef<Audio.Sound | null>(null);
+  
+  const { signIn } = useAuth();
+  const [request, response, promptAsync] = useGoogleAuth();
+
+  // Play background music when component mounts
+  useEffect(() => {
+    const playBackgroundMusic = async () => {
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../../assets/music/lofi-background-music-326931.mp3'),
+          { shouldPlay: true, isLooping: true, volume: 0.3 }
+        );
+        soundRef.current = sound;
+      } catch (error) {
+        console.log('Error loading music:', error);
+      }
+    };
+
+    playBackgroundMusic();
+
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.stopAsync();
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  // Handle Google sign-in response
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      handleGoogleSignIn(id_token);
+    }
+  }, [response]);
+
+  const handleGoogleSignIn = async (idToken: string) => {
+    setLoading(true);
+    try {
+      await signInWithGoogleIdToken(idToken);
+      if (soundRef.current) {
+        await soundRef.current.stopAsync();
+      }
+      router.replace('/(tabs)');
+    } catch (error) {
+      Alert.alert('Google Sign-In Failed', 'Unable to sign in with Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await signIn(email, password);
+      if (soundRef.current) {
+        await soundRef.current.stopAsync();
+      }
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Login Failed', 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -77,16 +158,16 @@ export default function LoginScreen() {
 
             {/* Title */}
             <ImageBackground
-            source={A.longbutton}
-            resizeMode="stretch"
-            style={styles.titlePill}
-            imageStyle={pixelArtWebOnly}
+              source={A.longbutton}
+              resizeMode="stretch"
+              style={styles.titlePill}
+              imageStyle={pixelArtWebOnly}
             >
-            <Text style={styles.panelTitle}>login</Text>
+              <Text style={styles.panelTitle}>login</Text>
             </ImageBackground>
 
-            {/* username */}
-            <Text style={styles.fieldLabel}>username</Text>
+            {/* Email */}
+            <Text style={styles.fieldLabel}>email</Text>
             <ImageBackground
               source={A.longbutton}
               resizeMode="stretch"
@@ -94,16 +175,18 @@ export default function LoginScreen() {
               imageStyle={pixelArtWebOnly}
             >
               <TextInput
-                value={username}
-                onChangeText={setUsername}
+                value={email}
+                onChangeText={setEmail}
                 style={styles.input}
                 placeholder=""
                 placeholderTextColor="#623B2A"
                 autoCapitalize="none"
+                keyboardType="email-address"
+                editable={!loading}
               />
             </ImageBackground>
 
-            {/* password */}
+            {/* Password */}
             <Text style={[styles.fieldLabel, { marginTop: 10 }]}>password</Text>
             <ImageBackground
               source={A.longbutton}
@@ -112,18 +195,23 @@ export default function LoginScreen() {
               imageStyle={pixelArtWebOnly}
             >
               <TextInput
-                value={pw}
-                onChangeText={setPw}
+                value={password}
+                onChangeText={setPassword}
                 style={styles.input}
                 placeholder=""
                 placeholderTextColor="#623B2A"
                 secureTextEntry
                 autoCapitalize="none"
+                editable={!loading}
               />
             </ImageBackground>
 
             {/* Google pill */}
-            <Pressable style={{ width: "100%", marginTop: 10 }}>
+            <Pressable 
+              style={{ width: "100%", marginTop: 10 }}
+              onPress={() => promptAsync()}
+              disabled={!request || loading}
+            >
               <ImageBackground
                 source={A.greylongbutton}
                 resizeMode="stretch"
@@ -136,26 +224,30 @@ export default function LoginScreen() {
             </Pressable>
 
             {/* forgot password */}
-            <Pressable>
+            <Pressable disabled={loading}>
               <Text style={styles.forgot}>forgot password?</Text>
             </Pressable>
           </ImageBackground>
 
           {/* bottom CTAs */}
           <View style={styles.bottomBtns}>
-            <PressableScale onPress={() => {}}>
+            <PressableScale onPress={handleLogin} disabled={loading}>
               <ImageBackground
                 source={A.yellowB}
                 resizeMode="contain"
                 style={styles.button}
                 imageStyle={pixelArtWebOnly}
               >
-                <Text style={styles.btnText}>log in</Text>
+                {loading ? (
+                  <ActivityIndicator color="#623B2A" />
+                ) : (
+                  <Text style={styles.btnText}>log in</Text>
+                )}
               </ImageBackground>
             </PressableScale>
 
             <Link href="/(auth)/signup" asChild>
-              <PressableScale onPress={() => {}}>
+              <PressableScale onPress={() => {}} disabled={loading}>
                 <ImageBackground
                   source={A.yellowB}
                   resizeMode="contain"
@@ -189,19 +281,17 @@ const styles = StyleSheet.create({
   closeBadge: { position: "absolute", top: -8, right: -6, width: 64, height: 64 },
 
   titlePill: {
-  width: 220,
-  height: 54,
-  alignItems: "center",
-  justifyContent: "center",
-  marginBottom: 6,
-},
-// (optional) remove marginBottom from panelTitle if you had one
-panelTitle: {
-  fontFamily: "PixelifySans_700",
-  fontSize: 28,
-  color: "#623B2A",
-},
-
+    width: 220,
+    height: 54,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  panelTitle: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 28,
+    color: "#623B2A",
+  },
 
   fieldLabel: {
     width: "100%",
@@ -256,5 +346,4 @@ panelTitle: {
           textShadowRadius: 0,
         }),
   },
-  
 });
