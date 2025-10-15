@@ -1,174 +1,258 @@
-import { useAuth } from '@/context/AuthContext';
-import { isUsernameTaken } from '@/services/api/userService';
-import { signInWithGoogleIdToken, useGoogleAuth } from '@/services/firebase/auth';
-import { Link, router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Link } from "expo-router";
+import React, { useRef, useState } from "react";
+import {
+    Animated,
+    Image,
+    ImageBackground,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+    useWindowDimensions,
+} from "react-native";
 
-const ERROR = 'Error';
-const SUCCESS = 'SUCCESS';
+export const options = { headerShown: false };
+
+const A = {
+  bg: require("../../assets/maiArt/backdrop.png"),
+  panel: require("../../assets/maiArt/panel_brown.png"),
+  yellowB: require("../../assets/maiArt/button_yellow.png"),
+  longbutton: require("../../assets/maiArt/button_long_brown.png"),
+    greylongbutton: require("../../assets/maiArt/button_grey.png"),
+  close: require("../../assets/maiArt/button_square.png"),
+  gLogo: require("../../assets/maiArt/google.png"),
+};
+
+function PressableScale({
+  onPress,
+  children,
+  style,
+}: {
+  onPress: () => void;
+  children: React.ReactNode;
+  style?: any;
+}) {
+  const s = useRef(new Animated.Value(1)).current;
+  return (
+    <Animated.View style={[{ transform: [{ scale: s }] }, style]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => Animated.spring(s, { toValue: 0.96, useNativeDriver: true }).start()}
+        onPressOut={() => Animated.spring(s, { toValue: 1, useNativeDriver: true }).start()}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 export default function SignUpScreen() {
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+  const { width } = useWindowDimensions();
+  const pixelArtWebOnly =
+    Platform.OS === "web" && width >= 768 ? ({ imageRendering: "pixelated" } as any) : undefined;
 
-    const { signUp } = useAuth();
-    const [request, response, promptAsync] = useGoogleAuth();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
 
-    // Handle Google Sign-In response
-    useEffect(() => {
-        if (response?.type === 'success') {
-            const { id_token } = response.params;
-            handleGoogleSignIn(id_token);
-        }
-    }, [response]);
+  return (
+    <View style={styles.screen}>
+      <ImageBackground
+        source={A.bg}
+        resizeMode="cover"
+        style={styles.bg}
+        imageStyle={pixelArtWebOnly}
+      >
+        <View style={styles.center}>
+          {/* PANEL */}
+          <ImageBackground
+            source={A.panel}
+            resizeMode="contain"
+            style={styles.panel}
+            imageStyle={pixelArtWebOnly}
+          >
+            <Image source={A.close} resizeMode="contain" style={styles.closeBadge} />
 
-    const handleGoogleSignIn = async (idToken: string) => {
-        setLoading(true);
-        try {
-            await signInWithGoogleIdToken(idToken);
-            router.replace('/(tabs)');
-        } catch (error) {
-            Alert.alert('Google Sign-In Failed', 'Unable to sign in with Google');
-        } finally {
-            setLoading(false);
-        }
-    };
+            {/* Title */}
+            <ImageBackground
+            source={A.longbutton}
+            resizeMode="stretch"
+            style={styles.titlePill}
+            imageStyle={pixelArtWebOnly}
+            >
+            <Text style={styles.panelTitle}>signup</Text>
+            </ImageBackground>
 
-    const handleSignup = async () => {
-    if (!username || !email || !password || !confirmPassword) {
-        Alert.alert(ERROR, 'Please fill in all fields');
-        return;
-    }
-    
-    if (username.length < 3) {
-        Alert.alert(ERROR, 'Username must be at least 3 characters');
-        return;
-    }
-    
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-        Alert.alert(ERROR, 'Username can only contain letters, numbers, and underscores');
-        return;
-    }
-    
-    if (password !== confirmPassword) {
-        Alert.alert(ERROR, 'Passwords do not match');
-        return;
-    }
-    
-    if (password.length < 6){
-        Alert.alert(ERROR, 'Password must be at least 6 characters');
-        return;
-    }
-    
-    setLoading(true);
-    
-    try {
-        // Check if username is taken
-        console.log('Checking username availability...');
-        const taken = await isUsernameTaken(username);
-        if (taken) {
-            Alert.alert(ERROR, 'Username is already taken');
-            setLoading(false);
-            return;
-        }
-        
-        console.log('Creating Firebase Auth account...');
-        await signUp(email, password, username);
-        
-        Alert.alert(SUCCESS, 'Account created successfully');
-        router.replace('/(tabs)');
-    } catch (error: any) {
-        console.error('Signup error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        
-        let errorMessage = 'An error occurred during signup';
-
-        if (error.message === 'Username is already taken') {
-            errorMessage = 'Username is already taken';
-        } else if (error.code === 'auth/email-already-in-use') {
-            errorMessage = 'This email is already registered';
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'Invalid email address';
-        } else if (error.code === 'auth/weak-password') {
-            errorMessage = 'Password is too weak';
-        } else if (error.message) {
-            errorMessage = error.message;
-        }
-
-        Alert.alert('Sign Up Failed', errorMessage);
-    } finally {
-        setLoading(false);
-    }
-};
-    
-    return (
-        <View>
-            <Text>Signup</Text>
-
-            <Text>Username</Text>
-            <TextInput
+            {/* username */}
+            <Text style={styles.fieldLabel}>username</Text>
+            <ImageBackground
+              source={A.longbutton}
+              resizeMode="stretch"
+              style={styles.inputWrap}
+              imageStyle={pixelArtWebOnly}
+            >
+              <TextInput
                 value={username}
                 onChangeText={setUsername}
-                placeholder='Username'
-                autoCapitalize='none'
-                editable={!loading}
-            />
+                style={styles.input}
+                placeholder=""
+                placeholderTextColor="#623B2A"
+                autoCapitalize="none"
+              />
+            </ImageBackground>
 
-            <Text>Email</Text>
-            <TextInput
+            {/* email */}
+            <Text style={[styles.fieldLabel, { marginTop: 10 }]}>email</Text>
+            <ImageBackground
+              source={A.longbutton}
+              resizeMode="stretch"
+              style={styles.inputWrap}
+              imageStyle={pixelArtWebOnly}
+            >
+              <TextInput
                 value={email}
                 onChangeText={setEmail}
-                placeholder='Email'
-                autoCapitalize='none'
-                keyboardType='email-address'
-                editable={!loading}
-            />
-            
-            <Text>Password</Text>
-            <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder='Password'
-                secureTextEntry
-                autoCapitalize='none'
-                editable={!loading}
-            />
-            
-            <Text>Confirm Password</Text>
-            <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder='Confirm Password'
-                secureTextEntry
-                autoCapitalize='none'
-                editable={!loading}
-            />
-            
-            <TouchableOpacity onPress={handleSignup} disabled={loading}>
-                {loading ? (
-                    <ActivityIndicator />
-                ) : (
-                    <Text>Sign Up</Text>
-                )}
-            </TouchableOpacity>
+                style={styles.input}
+                placeholder=""
+                placeholderTextColor="#623B2A"
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </ImageBackground>
 
-            <TouchableOpacity 
-                onPress={() => promptAsync()} 
-                disabled={!request || loading}
+            {/* password */}
+            <Text style={[styles.fieldLabel, { marginTop: 10 }]}>password</Text>
+            <ImageBackground
+              source={A.longbutton}
+              resizeMode="stretch"
+              style={styles.inputWrap}
+              imageStyle={pixelArtWebOnly}
             >
-                <Text>Sign up with Google</Text>
-            </TouchableOpacity>
+              <TextInput
+                value={pw}
+                onChangeText={setPw}
+                style={styles.input}
+                placeholder=""
+                placeholderTextColor="#623B2A"
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </ImageBackground>
 
-            <Link href="/(auth)/login" asChild disabled={loading}>
-                <TouchableOpacity>
-                    <Text>Already have an account? Log In</Text>
-                </TouchableOpacity>
+            {/* Google pill */}
+            <Pressable style={{ width: "100%", marginTop: 10 }}>
+              <ImageBackground
+                source={A.greylongbutton}
+                resizeMode="stretch"
+                style={styles.googlePill}
+                imageStyle={pixelArtWebOnly}
+              >
+                <Image source={A.gLogo} style={styles.gLogo} resizeMode="contain" />
+                <Text style={styles.googleText}>via google</Text>
+              </ImageBackground>
+            </Pressable>
+          </ImageBackground>
+
+          {/* bottom CTA */}
+          <View style={styles.bottomBtns}>
+            <PressableScale onPress={() => {}}>
+              <ImageBackground
+                source={A.yellowB}
+                resizeMode="contain"
+                style={styles.button}
+                imageStyle={pixelArtWebOnly}
+              >
+                <Text style={styles.btnText}>sign up</Text>
+              </ImageBackground>
+            </PressableScale>
+
+            <Link href="/(auth)/login" asChild>
+              <Pressable>
+                <Text style={styles.altLink}>already have an account? log in</Text>
+              </Pressable>
             </Link>
+          </View>
         </View>
-    );
+      </ImageBackground>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#fff" },
+  bg: { flex: 1, width: "100%", height: "100%" },
+
+  center: { width: "100%", maxWidth: 440, alignItems: "center" },
+
+  panel: {
+    width: 340,
+    height: 600,
+    alignItems: "center",
+    paddingTop: 28,
+    paddingHorizontal: 22,
+  },
+  closeBadge: { position: "absolute", top: -8, right: -6, width: 64, height: 64 },
+
+  titlePill: {
+  width: 220,
+  height: 54,
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: 6,
+},
+panelTitle: {
+  fontFamily: "PixelifySans_700",
+  fontSize: 28,
+  color: "#623B2A",
+},
+
+  fieldLabel: {
+    width: "100%",
+    fontFamily: "PixelifySans_700",
+    fontSize: 18,
+    color: "#623B2A",
+    marginBottom: 4,
+    textAlign: "center", 
+    alignSelf: "center",
+  },
+  inputWrap: {
+    width: "100%",
+    height: 54,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  input: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 18,
+    color: "#3B2A27",
+  },
+
+  googlePill: {
+    width: "100%",
+    height: 54,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    columnGap: 10,
+  },
+  gLogo: { width: 22, height: 22, marginRight: 4 },
+  googleText: { fontFamily: "PixelifySans_700", fontSize: 18, color: "#623B2A" },
+
+  bottomBtns: { marginTop: 14, gap: 16, alignItems: "center" },
+  button: { width: 220, height: 70, alignItems: "center", justifyContent: "center" },
+  btnText: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 22,
+    color: "#623B2A",
+    ...(Platform.OS === "web"
+      ? { textShadow: "0px 1px 0px #F3D08C" }
+      : {
+          textShadowColor: "#F3D08C",
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 0,
+        }),
+  },
+  altLink: { fontFamily: "PixelifySans_700", fontSize: 16, color: "#623B2A", marginTop: 4 },
+});
