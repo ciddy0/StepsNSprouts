@@ -1,9 +1,12 @@
+import { PixelifySans_400Regular, PixelifySans_700Bold, useFonts } from "@expo-google-fonts/pixelify-sans";
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+
+
 
 import { AuthProvider } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -15,6 +18,8 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    PixelifySans_400: PixelifySans_400Regular,
+    PixelifySans_700: PixelifySans_700Bold,
   });
 
   useEffect(() => {
