@@ -1,12 +1,12 @@
 // app/profile-settings.tsx
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext"; // provides user auth state
 import {
-  ensureUserProfile,
-  getUserProfile,
-  updateUserProfile,
+  ensureUserProfile, // creates profile if missing
+  getUserProfile, // fetches user profile
+  updateUserProfile, // updates user profile
 } from "@/services/firebase/userProfile";
-import { Redirect } from "expo-router";
+import { Redirect } from "expo-router"; // for navigation
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,31 +21,32 @@ import {
 } from "react-native";
 
 export default function ProfileSettingsScreen() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth(); // get current user and loading state
 
+  // Local state for profile data and loading/saving states
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  // Profile fields
   const [stepGoal, setStepGoal] = useState<number | undefined>(undefined);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  // New state variables for weight, height, and age
+  // Additional state variables for weight, height, and age
   const [weight, setWeight] = useState<string>(""); // in lbs
   const [height, setHeight] = useState<string>(""); // in ft
   const [age, setAge] = useState<string>("");       // in years
 
-
+  // Load user profile on mount or when user changes
   useEffect(() => {
     const load = async () => {
       if (!user) return;
       try {
         setLoadingProfile(true);
-
+        // Ensure profile exists
         await ensureUserProfile(user.uid, {
           email: user.email ?? undefined,
         });
-
+        // Fetch profile data
         const profile = await getUserProfile(user.uid);
         if (profile) {
           setStepGoal(
@@ -64,43 +65,45 @@ export default function ProfileSettingsScreen() {
         setLoadingProfile(false);
       }
     };
-
+    // Call the load function
     load();
-  }, [user]);
+  }, [user]); // re-run if user changes
 
+  // Handler for saving profile changes
   const onSave = async () => {
     if (!user) return;
     try {
       setSaving(true);
-
+      // Prepare the patch object with updated fields
       const patch: Record<string, any> = {
         firstName: firstName.trim() || undefined,
         lastName: lastName.trim() || undefined,
         stepGoal:
-          typeof stepGoal === "number" && !Number.isNaN(stepGoal)
+          typeof stepGoal === "number" && !Number.isNaN(stepGoal) // only include if valid number
             ? stepGoal
             : undefined,
       };
-
+      // Parse and validate weight, height, and age inputs
       const toNumberOrUndefined = (s: string, allowDecimal = false) => {
-        const trimmed = s.trim();
+        const trimmed = s.trim(); // remove surrounding whitespace
         if (trimmed === "") return undefined;
-        const clean = allowDecimal
+        const clean = allowDecimal // allow decimal point for height
           ? trimmed.replace(/[^0-9.]/g, "")
           : trimmed.replace(/[^0-9]/g, "");
-        const n = Number(clean);
-        return Number.isFinite(n) ? n : undefined;
+        const n = Number(clean); // convert to number
+        return Number.isFinite(n) ? n : undefined; // return number or undefined
       };
 
-      const weightNum = toNumberOrUndefined(weight);          // lbs (integer ok)
-      const heightNum = toNumberOrUndefined(height, true);    // ft (allow decimals like 5.5)
-      const ageNum = toNumberOrUndefined(age);                 // years (integer ok)
+      const weightNum = toNumberOrUndefined(weight); // weight in lbs
+      const heightNum = toNumberOrUndefined(height, true); // height in ft (decimal allowed)
+      const ageNum = toNumberOrUndefined(age); // age in years
 
+      // Add to patch if valid numbers
       patch.weight = weightNum;
       patch.height = heightNum;
       patch.age = ageNum;
 
-
+      // Update the user profile in Firestore
       await updateUserProfile(user.uid, patch);
       Alert.alert("Success", "Your profile was updated.");
     } catch (err: any) {
@@ -109,7 +112,7 @@ export default function ProfileSettingsScreen() {
       setSaving(false);
     }
   };
-
+  // Render loading state
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -118,11 +121,11 @@ export default function ProfileSettingsScreen() {
       </View>
     );
   }
-
+  // Redirect to login if not authenticated
   if (!user) {
     return <Redirect href="/login" />;
   }
-
+  // Render profile settings form
   if (loadingProfile) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -131,7 +134,7 @@ export default function ProfileSettingsScreen() {
       </View>
     );
   }
-
+  // Renders the profile settings form
   return (
     <KeyboardAvoidingView
       behavior={Platform.select({ ios: "padding", android: undefined })}
@@ -197,6 +200,7 @@ export default function ProfileSettingsScreen() {
           />
         </View>
 
+        {/* Weight Input */}
         <View style={{ gap: 6 }}>
           <Text style={{ fontWeight: "600" }}>Weight (lbs)</Text>
           <TextInput
@@ -214,6 +218,7 @@ export default function ProfileSettingsScreen() {
           />
         </View>
 
+        {/* Height Input */}
         <View style={{ gap: 6 }}>
           <Text style={{ fontWeight: "600" }}>Height (ft)</Text>
           <TextInput
@@ -231,6 +236,7 @@ export default function ProfileSettingsScreen() {
           />
         </View>
 
+        {/* Age Input */}
         <View style={{ gap: 6 }}>
           <Text style={{ fontWeight: "600" }}>Age (years)</Text>
           <TextInput
