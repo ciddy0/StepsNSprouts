@@ -1,27 +1,113 @@
 // app/profile-settings.tsx
-
-import { useAuth } from "@/context/AuthContext"; // provides user auth state
+import { useAuth } from "@/context/AuthContext";
 import {
-  ensureUserProfile, // creates profile if missing
-  getUserProfile, // fetches user profile
-  updateUserProfile, // updates user profile
+    ensureUserProfile,
+    getUserProfile,
+    updateUserProfile,
 } from "@/services/firebase/userProfile";
-import { Redirect } from "expo-router"; // for navigation
+import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Button,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Alert,
+    Button,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 
+
+const A = {
+  bg: require("../assets/maiArt/backdrop.png"),
+  panel: require("../assets/maiArt/panel_brown.png"),
+  plaque: require("../assets/maiArt/button_long_brown.png"),
+  close: require("../assets/maiArt/button_square.png"),
+
+
+  pillBlue: (() => {
+    return require("../assets/maiArt/button_blue.png");
+  })(),
+  pillGreen: (() => {
+    return require("../assets/maiArt/button_green.png");
+  })(),
+  pillRed: (() => {
+    return require("../assets/maiArt/button_red.png");
+  })(),
+
+
+  avatarRing: (() => {
+    return require("../assets/maiArt/button_square.png");
+  })(),
+  sprout: (() => {
+    try {
+      return require("../assets/maiArt/sprout.png");
+    } catch {
+      return require("../assets/maiArt/profile.png");
+    }
+  })(),
+  cam: (() => {
+    return require("../assets/maiArt/camera.png");
+  })(),
+};
+
+const BROWN = "#623B2A";
+
+/* ================== tiny scale press ================== */
+function PressableScale({ onPress, children, style }: any) {
+  const s = useRef(new Animated.Value(1)).current;
+  return (
+    <Animated.View style={[{ transform: [{ scale: s }] }, style]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => Animated.spring(s, { toValue: 0.96, useNativeDriver: true }).start()}
+        onPressOut={() => Animated.spring(s, { toValue: 1, useNativeDriver: true }).start()}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+
+function BlueInput({
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  secureTextEntry,
+  autoCapitalize,
+}: {
+  value: string;
+  onChangeText: (t: string) => void;
+  placeholder: string;
+  keyboardType?: "default" | "number-pad";
+  secureTextEntry?: boolean;
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+}) {
+  return (
+    <ImageBackground source={A.pillBlue} resizeMode="stretch" style={s.inputPill}>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#f7f0d3"
+        keyboardType={keyboardType ?? "default"}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize ?? "none"}
+        style={s.inputText}
+      />
+    </ImageBackground>
+  );
+}
+
+
+export const options = { headerShown: false };
+
 export default function ProfileSettingsScreen() {
-  const { user, loading } = useAuth(); // get current user and loading state
+  const { user, loading } = useAuth();
 
   // Local state for profile data and loading/saving states
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -30,6 +116,9 @@ export default function ProfileSettingsScreen() {
   const [stepGoal, setStepGoal] = useState<number | undefined>(undefined);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [weight, setWeight] = useState<string>(""); // optional extra field
+  const [age, setAge] = useState<string>("");
+  const [sex, setSex] = useState<string>("");
 
   // Additional state variables for weight, height, and age
   const [weight, setWeight] = useState<string>(""); // in lbs
@@ -42,22 +131,16 @@ export default function ProfileSettingsScreen() {
       if (!user) return;
       try {
         setLoadingProfile(true);
-        // Ensure profile exists
+
         await ensureUserProfile(user.uid, {
           email: user.email ?? undefined,
         });
-        // Fetch profile data
+
         const profile = await getUserProfile(user.uid);
         if (profile) {
-          setStepGoal(
-            typeof profile.stepGoal === "number" ? profile.stepGoal : undefined
-          );
+          setStepGoal(typeof profile.stepGoal === "number" ? profile.stepGoal : undefined);
           setFirstName(profile.firstName ?? "");
           setLastName(profile.lastName ?? "");
-          // Load weight, height, and age
-          setWeight(typeof profile.weight === "number" ? String(profile.weight) : "");
-          setHeight(typeof profile.height === "number" ? String(profile.height) : "");
-          setAge(typeof profile.age === "number" ? String(profile.age) : "");
         }
       } catch (err: any) {
         Alert.alert("Error", err?.message ?? "Failed to load profile");
@@ -65,7 +148,7 @@ export default function ProfileSettingsScreen() {
         setLoadingProfile(false);
       }
     };
-    // Call the load function
+
     load();
   }, [user]); // re-run if user changes
 
@@ -74,36 +157,16 @@ export default function ProfileSettingsScreen() {
     if (!user) return;
     try {
       setSaving(true);
-      // Prepare the patch object with updated fields
+
       const patch: Record<string, any> = {
         firstName: firstName.trim() || undefined,
         lastName: lastName.trim() || undefined,
         stepGoal:
-          typeof stepGoal === "number" && !Number.isNaN(stepGoal) // only include if valid number
+          typeof stepGoal === "number" && !Number.isNaN(stepGoal)
             ? stepGoal
             : undefined,
       };
-      // Parse and validate weight, height, and age inputs
-      const toNumberOrUndefined = (s: string, allowDecimal = false) => {
-        const trimmed = s.trim(); // remove surrounding whitespace
-        if (trimmed === "") return undefined;
-        const clean = allowDecimal // allow decimal point for height
-          ? trimmed.replace(/[^0-9.]/g, "")
-          : trimmed.replace(/[^0-9]/g, "");
-        const n = Number(clean); // convert to number
-        return Number.isFinite(n) ? n : undefined; // return number or undefined
-      };
 
-      const weightNum = toNumberOrUndefined(weight); // weight in lbs
-      const heightNum = toNumberOrUndefined(height, true); // height in ft (decimal allowed)
-      const ageNum = toNumberOrUndefined(age); // age in years
-
-      // Add to patch if valid numbers
-      patch.weight = weightNum;
-      patch.height = heightNum;
-      patch.age = ageNum;
-
-      // Update the user profile in Firestore
       await updateUserProfile(user.uid, patch);
       Alert.alert("Success", "Your profile was updated.");
     } catch (err: any) {
@@ -115,22 +178,22 @@ export default function ProfileSettingsScreen() {
   // Render loading state
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View style={s.centerLoading}>
         <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 8 }}>Loading…</Text>
+        <Text style={s.loadingTxt}>Loading…</Text>
       </View>
     );
   }
-  // Redirect to login if not authenticated
+
   if (!user) {
     return <Redirect href="/login" />;
   }
-  // Render profile settings form
+
   if (loadingProfile) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View style={s.centerLoading}>
         <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 8 }}>Loading your profile…</Text>
+        <Text style={s.loadingTxt}>Loading your profile…</Text>
       </View>
     );
   }
@@ -140,118 +203,93 @@ export default function ProfileSettingsScreen() {
       behavior={Platform.select({ ios: "padding", android: undefined })}
       style={{ flex: 1 }}
     >
-      <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
-        <Text style={{ fontSize: 22, fontWeight: "700" }}>Profile Settings</Text>
+      <ImageBackground source={A.bg} resizeMode="cover" style={s.bg} imageStyle={pixel}>
+        <View style={s.center}>
+          {/* wood panel */}
+          <ImageBackground source={A.panel} resizeMode="contain" style={s.panel} imageStyle={pixel}>
+            {/* close w/ x */}
+            <PressableScale style={s.closeWrap} onPress={() => {}}>
+              <ImageBackground source={A.close} style={s.close} resizeMode="contain" imageStyle={pixel}>
+                <Text style={s.closeX}>x</Text>
+              </ImageBackground>
+            </PressableScale>
 
-        {/* First Name */}
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>First Name</Text>
-          <TextInput
-            value={firstName}
-            onChangeText={setFirstName}
-            placeholder="First name"
-            autoCapitalize="words"
-            style={{
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              padding: 12,
-              backgroundColor: "white",
-            }}
-          />
-        </View>
+            {/* title */}
+            <ImageBackground source={A.plaque} style={s.titlePill} resizeMode="stretch" imageStyle={pixel}>
+              <Text style={s.title}>profile</Text>
+            </ImageBackground>
 
-        {/* Last Name */}
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>Last Name</Text>
-          <TextInput
-            value={lastName}
-            onChangeText={setLastName}
-            placeholder="Last name"
-            autoCapitalize="words"
-            style={{
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              padding: 12,
-              backgroundColor: "white",
-            }}
-          />
-        </View>
+            <ScrollView
+              contentContainerStyle={{ alignItems: "center", paddingBottom: 18 }}
+              showsVerticalScrollIndicator={false}
+              style={{ width: "100%" }}
+            >
+              {/* avatar + camera */}
+              <ImageBackground
+                source={A.avatarRing}
+                resizeMode="stretch"
+                style={s.avatarRing}
+                imageStyle={pixel}
+              >
+                <Image source={A.sprout} style={s.avatar} resizeMode="contain" />
+                <PressableScale style={s.camBtn} onPress={() => Alert.alert("Avatar", "Open camera/gallery here.")}>
+                  <Image source={A.cam} style={s.camIcon} resizeMode="contain" />
+                </PressableScale>
+              </ImageBackground>
 
-        {/* Daily Step Goal */}
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>Daily Step Goal</Text>
-          <TextInput
-            value={stepGoal?.toString() ?? ""}
-            keyboardType="number-pad"
-            onChangeText={(t) => {
-              const n = Number(t.replace(/[^\d]/g, ""));
-              setStepGoal(Number.isNaN(n) ? undefined : n);
-            }}
-            placeholder="e.g. 10000"
-            style={{
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              padding: 12,
-              backgroundColor: "white",
-            }}
-          />
-        </View>
+              {/* inputs */}
+              <BlueInput
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="first name"
+                autoCapitalize="words"
+              />
+              <BlueInput
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="last name"
+                autoCapitalize="words"
+              />
+              <BlueInput
+                value={weight}
+                onChangeText={setWeight}
+                placeholder="weight"
+                keyboardType="number-pad"
+              />
+              <BlueInput value={age} onChangeText={setAge} placeholder="age" keyboardType="number-pad" />
+              <BlueInput value={sex} onChangeText={setSex} placeholder="sex" />
 
-        {/* Weight Input */}
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>Weight (lbs)</Text>
-          <TextInput
-            value={weight}
-            onChangeText={setWeight}
-            keyboardType="number-pad"
-            placeholder="e.g. 150"
-            style={{
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              padding: 12,
-              backgroundColor: "white",
-            }}
-          />
-        </View>
+              {/* goal */}
+              <ImageBackground source={A.pillBlue} resizeMode="stretch" style={s.inputPill}>
+                <TextInput
+                  value={stepGoal?.toString() ?? ""}
+                  onChangeText={(t) => {
+                    const n = Number(t.replace(/[^\d]/g, ""));
+                    setStepGoal(Number.isNaN(n) ? undefined : n);
+                  }}
+                  placeholder="daily step goal"
+                  placeholderTextColor="#f7f0d3"
+                  keyboardType="number-pad"
+                  style={s.inputText}
+                />
+              </ImageBackground>
 
-        {/* Height Input */}
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>Height (ft)</Text>
-          <TextInput
-            value={height}
-            onChangeText={setHeight}
-            keyboardType={Platform.OS === "ios" ? "decimal-pad" : "numeric"}
-            placeholder="e.g. 5.5"
-            style={{
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              padding: 12,
-              backgroundColor: "white",
-            }}
-          />
-        </View>
+              {/* buttons */}
+              <View style={s.buttonRow}>
+                <PressableScale onPress={onSave} style={{ opacity: saving ? 0.7 : 1 }}>
+                  <ImageBackground source={A.pillGreen} resizeMode="stretch" style={s.ctaPill} imageStyle={pixel}>
+                    <Text style={s.ctaText}>{saving ? "saving…" : "save"}</Text>
+                  </ImageBackground>
+                </PressableScale>
 
-        {/* Age Input */}
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>Age (years)</Text>
-          <TextInput
-            value={age}
-            onChangeText={setAge}
-            keyboardType="number-pad"
-            placeholder="e.g. 29"
-            style={{
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              padding: 12,
-              backgroundColor: "white",
-            }}
-          />
+                <PressableScale onPress={() => Alert.alert("Sign out", "Hook up to your sign-out handler.")}>
+                  <ImageBackground source={A.pillRed} resizeMode="stretch" style={s.ctaPill} imageStyle={pixel}>
+                    <Text style={s.ctaText}>sign out</Text>
+                  </ImageBackground>
+                </PressableScale>
+              </View>
+            </ScrollView>
+          </ImageBackground>
         </View>
 
         <Button
@@ -263,3 +301,82 @@ export default function ProfileSettingsScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+
+const s = StyleSheet.create({
+  bg: { flex: 1, width: "100%", height: "100%" },
+  center: { width: "100%", maxWidth: 440, alignItems: "center" },
+  panel: {
+    width: 360,
+    height: 680,
+    alignItems: "center",
+    paddingTop: 24,
+    paddingHorizontal: 18,
+  },
+
+  closeWrap: { position: "absolute", top: -8, right: -6 },
+  close: { width: 58, height: 58, alignItems: "center", justifyContent: "center" },
+  closeX: { fontFamily: "PixelifySans_700", fontSize: 26, color: BROWN, lineHeight: 26, textAlign: "center" },
+
+  titlePill: {
+    width: 220,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  title: { fontFamily: "PixelifySans_700", fontSize: 26, color: BROWN },
+
+  avatarRing: {
+    width: 160,
+    height: 160,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  avatar: { width: 96, height: 96 },
+  camBtn: {
+    position: "absolute",
+    right: 8,
+    bottom: 8,
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  camIcon: { width: 28, height: 28},
+
+  inputPill: {
+    width: 280,
+    height: 58,
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+  inputText: {
+    width: "100%",
+    textAlign: "center",
+    fontFamily: "PixelifySans_700",
+    fontSize: 20,
+    color: "#ffffff",
+  },
+
+  buttonRow: {
+    width: 300,
+    marginTop: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  ctaPill: {
+    width: 135,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaText: { fontFamily: "PixelifySans_700", fontSize: 20, color: "#ffffff" },
+
+  centerLoading: { flex: 1, alignItems: "center", justifyContent: "center" },
+  loadingTxt: { marginTop: 8, fontFamily: "PixelifySans_700", color: BROWN },
+});
