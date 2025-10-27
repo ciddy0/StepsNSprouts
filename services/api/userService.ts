@@ -1,13 +1,13 @@
 import { User as FirebaseUser } from "firebase/auth";
 import {
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    query,
-    setDoc,
-    updateDoc,
-    where
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where
 } from "firebase/firestore";
 import { User } from "../firebase/collections/user";
 import { db } from "../firebase/config";
