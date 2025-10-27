@@ -1,31 +1,33 @@
 // app/profile-settings.tsx
 import { useAuth } from "@/context/AuthContext";
 import {
-    ensureUserProfile,
-    getUserProfile,
-    updateUserProfile,
+  ensureUserProfile,
+  getUserProfile,
+  updateUserProfile,
 } from "@/services/firebase/userProfile";
-import { Redirect } from "expo-router";
-import { useEffect, useState } from "react";
+import { Redirect, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Button,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-
 
 const A = {
   bg: require("../assets/maiArt/backdrop.png"),
   panel: require("../assets/maiArt/panel_brown.png"),
   plaque: require("../assets/maiArt/button_long_brown.png"),
   close: require("../assets/maiArt/button_square.png"),
-
 
   pillBlue: (() => {
     return require("../assets/maiArt/button_blue.png");
@@ -36,7 +38,6 @@ const A = {
   pillRed: (() => {
     return require("../assets/maiArt/button_red.png");
   })(),
-
 
   avatarRing: (() => {
     return require("../assets/maiArt/button_square.png");
@@ -62,15 +63,18 @@ function PressableScale({ onPress, children, style }: any) {
     <Animated.View style={[{ transform: [{ scale: s }] }, style]}>
       <Pressable
         onPress={onPress}
-        onPressIn={() => Animated.spring(s, { toValue: 0.96, useNativeDriver: true }).start()}
-        onPressOut={() => Animated.spring(s, { toValue: 1, useNativeDriver: true }).start()}
+        onPressIn={() =>
+          Animated.spring(s, { toValue: 0.96, useNativeDriver: true }).start()
+        }
+        onPressOut={() =>
+          Animated.spring(s, { toValue: 1, useNativeDriver: true }).start()
+        }
       >
         {children}
       </Pressable>
     </Animated.View>
   );
 }
-
 
 function BlueInput({
   value,
@@ -88,7 +92,11 @@ function BlueInput({
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
 }) {
   return (
-    <ImageBackground source={A.pillBlue} resizeMode="stretch" style={s.inputPill}>
+    <ImageBackground
+      source={A.pillBlue}
+      resizeMode="stretch"
+      style={s.inputPill}
+    >
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -103,27 +111,23 @@ function BlueInput({
   );
 }
 
-
 export const options = { headerShown: false };
 
 export default function ProfileSettingsScreen() {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
 
   // Local state for profile data and loading/saving states
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
+  
   // Profile fields
   const [stepGoal, setStepGoal] = useState<number | undefined>(undefined);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [weight, setWeight] = useState<string>(""); // optional extra field
-  const [age, setAge] = useState<string>("");
-  const [sex, setSex] = useState<string>("");
-
-  // Additional state variables for weight, height, and age
   const [weight, setWeight] = useState<string>(""); // in lbs
   const [height, setHeight] = useState<string>(""); // in ft
-  const [age, setAge] = useState<string>("");       // in years
+  const [age, setAge] = useState<string>(""); // in years
 
   // Load user profile on mount or when user changes
   useEffect(() => {
@@ -138,9 +142,14 @@ export default function ProfileSettingsScreen() {
 
         const profile = await getUserProfile(user.uid);
         if (profile) {
-          setStepGoal(typeof profile.stepGoal === "number" ? profile.stepGoal : undefined);
+          setStepGoal(
+            typeof profile.stepGoal === "number" ? profile.stepGoal : undefined
+          );
           setFirstName(profile.firstName ?? "");
           setLastName(profile.lastName ?? "");
+          setWeight(profile.weight?.toString() ?? "");
+          setHeight(profile.height?.toString() ?? "");
+          setAge(profile.age?.toString() ?? "");
         }
       } catch (err: any) {
         Alert.alert("Error", err?.message ?? "Failed to load profile");
@@ -150,7 +159,7 @@ export default function ProfileSettingsScreen() {
     };
 
     load();
-  }, [user]); // re-run if user changes
+  }, [user]);
 
   // Handler for saving profile changes
   const onSave = async () => {
@@ -161,6 +170,9 @@ export default function ProfileSettingsScreen() {
       const patch: Record<string, any> = {
         firstName: firstName.trim() || undefined,
         lastName: lastName.trim() || undefined,
+        weight: weight ? Number(weight) : undefined,
+        height: height ? Number(height) : undefined,
+        age: age ? Number(age) : undefined,
         stepGoal:
           typeof stepGoal === "number" && !Number.isNaN(stepGoal)
             ? stepGoal
@@ -175,6 +187,29 @@ export default function ProfileSettingsScreen() {
       setSaving(false);
     }
   };
+
+  const handleSignOut = async () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut();
+            router.replace("/login");
+          } catch (err: any) {
+            Alert.alert("Error", err?.message ?? "Failed to sign out");
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleClose = () => {
+    router.back();
+  };
+
   // Render loading state
   if (loading) {
     return (
@@ -197,114 +232,169 @@ export default function ProfileSettingsScreen() {
       </View>
     );
   }
+
   // Renders the profile settings form
   return (
     <KeyboardAvoidingView
       behavior={Platform.select({ ios: "padding", android: undefined })}
       style={{ flex: 1 }}
     >
-      <ImageBackground source={A.bg} resizeMode="cover" style={s.bg} imageStyle={pixel}>
-        <View style={s.center}>
-          {/* wood panel */}
-          <ImageBackground source={A.panel} resizeMode="contain" style={s.panel} imageStyle={pixel}>
-            {/* close w/ x */}
-            <PressableScale style={s.closeWrap} onPress={() => {}}>
-              <ImageBackground source={A.close} style={s.close} resizeMode="contain" imageStyle={pixel}>
-                <Text style={s.closeX}>x</Text>
-              </ImageBackground>
-            </PressableScale>
-
-            {/* title */}
-            <ImageBackground source={A.plaque} style={s.titlePill} resizeMode="stretch" imageStyle={pixel}>
-              <Text style={s.title}>profile</Text>
-            </ImageBackground>
-
-            <ScrollView
-              contentContainerStyle={{ alignItems: "center", paddingBottom: 18 }}
-              showsVerticalScrollIndicator={false}
-              style={{ width: "100%" }}
+      <ImageBackground
+        source={A.bg}
+        resizeMode="cover"
+        style={s.bg}
+      >
+        <View style={s.container}>
+          <View style={s.center}>
+            {/* wood panel */}
+            <ImageBackground
+              source={A.panel}
+              resizeMode="contain"
+              style={s.panel}
             >
-              {/* avatar + camera */}
+              {/* close w/ x */}
+              <PressableScale style={s.closeWrap} onPress={handleClose}>
+                <ImageBackground
+                  source={A.close}
+                  style={s.close}
+                  resizeMode="contain"
+                >
+                  <Text style={s.closeX}>x</Text>
+                </ImageBackground>
+              </PressableScale>
+
+              {/* title */}
               <ImageBackground
-                source={A.avatarRing}
+                source={A.plaque}
+                style={s.titlePill}
                 resizeMode="stretch"
-                style={s.avatarRing}
-                imageStyle={pixel}
               >
-                <Image source={A.sprout} style={s.avatar} resizeMode="contain" />
-                <PressableScale style={s.camBtn} onPress={() => Alert.alert("Avatar", "Open camera/gallery here.")}>
-                  <Image source={A.cam} style={s.camIcon} resizeMode="contain" />
-                </PressableScale>
+                <Text style={s.title}>profile</Text>
               </ImageBackground>
 
-              {/* inputs */}
-              <BlueInput
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="first name"
-                autoCapitalize="words"
-              />
-              <BlueInput
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="last name"
-                autoCapitalize="words"
-              />
-              <BlueInput
-                value={weight}
-                onChangeText={setWeight}
-                placeholder="weight"
-                keyboardType="number-pad"
-              />
-              <BlueInput value={age} onChangeText={setAge} placeholder="age" keyboardType="number-pad" />
-              <BlueInput value={sex} onChangeText={setSex} placeholder="sex" />
+              <ScrollView
+                contentContainerStyle={{
+                  alignItems: "center",
+                  paddingBottom: 18,
+                }}
+                showsVerticalScrollIndicator={false}
+                style={{ width: "100%" }}
+              >
+                {/* avatar + camera */}
+                <ImageBackground
+                  source={A.avatarRing}
+                  resizeMode="stretch"
+                  style={s.avatarRing}
+                >
+                  <Image
+                    source={A.sprout}
+                    style={s.avatar}
+                    resizeMode="contain"
+                  />
+                  <PressableScale
+                    style={s.camBtn}
+                    onPress={() =>
+                      Alert.alert("Avatar", "Open camera/gallery here.")
+                    }
+                  >
+                    <Image
+                      source={A.cam}
+                      style={s.camIcon}
+                      resizeMode="contain"
+                    />
+                  </PressableScale>
+                </ImageBackground>
 
-              {/* goal */}
-              <ImageBackground source={A.pillBlue} resizeMode="stretch" style={s.inputPill}>
-                <TextInput
-                  value={stepGoal?.toString() ?? ""}
-                  onChangeText={(t) => {
-                    const n = Number(t.replace(/[^\d]/g, ""));
-                    setStepGoal(Number.isNaN(n) ? undefined : n);
-                  }}
-                  placeholder="daily step goal"
-                  placeholderTextColor="#f7f0d3"
-                  keyboardType="number-pad"
-                  style={s.inputText}
+                {/* inputs */}
+                <BlueInput
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="first name"
+                  autoCapitalize="words"
                 />
-              </ImageBackground>
+                <BlueInput
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="last name"
+                  autoCapitalize="words"
+                />
+                <BlueInput
+                  value={weight}
+                  onChangeText={setWeight}
+                  placeholder="weight (lbs)"
+                  keyboardType="number-pad"
+                />
+                <BlueInput
+                  value={height}
+                  onChangeText={setHeight}
+                  placeholder="height (inches)"
+                  keyboardType="number-pad"
+                />
+                <BlueInput
+                  value={age}
+                  onChangeText={setAge}
+                  placeholder="age"
+                  keyboardType="number-pad"
+                />
 
-              {/* buttons */}
-              <View style={s.buttonRow}>
-                <PressableScale onPress={onSave} style={{ opacity: saving ? 0.7 : 1 }}>
-                  <ImageBackground source={A.pillGreen} resizeMode="stretch" style={s.ctaPill} imageStyle={pixel}>
-                    <Text style={s.ctaText}>{saving ? "saving…" : "save"}</Text>
-                  </ImageBackground>
-                </PressableScale>
+                {/* goal */}
+                <ImageBackground
+                  source={A.pillBlue}
+                  resizeMode="stretch"
+                  style={s.inputPill}
+                >
+                  <TextInput
+                    value={stepGoal?.toString() ?? ""}
+                    onChangeText={(t) => {
+                      const n = Number(t.replace(/[^\d]/g, ""));
+                      setStepGoal(Number.isNaN(n) ? undefined : n);
+                    }}
+                    placeholder="daily step goal"
+                    placeholderTextColor="#f7f0d3"
+                    keyboardType="number-pad"
+                    style={s.inputText}
+                  />
+                </ImageBackground>
 
-                <PressableScale onPress={() => Alert.alert("Sign out", "Hook up to your sign-out handler.")}>
-                  <ImageBackground source={A.pillRed} resizeMode="stretch" style={s.ctaPill} imageStyle={pixel}>
-                    <Text style={s.ctaText}>sign out</Text>
-                  </ImageBackground>
-                </PressableScale>
-              </View>
-            </ScrollView>
-          </ImageBackground>
+                {/* buttons */}
+                <View style={s.buttonRow}>
+                  <PressableScale
+                    onPress={onSave}
+                    style={{ opacity: saving ? 0.7 : 1 }}
+                  >
+                    <ImageBackground
+                      source={A.pillGreen}
+                      resizeMode="stretch"
+                      style={s.ctaPill}
+                    >
+                      <Text style={s.ctaText}>
+                        {saving ? "saving…" : "save"}
+                      </Text>
+                    </ImageBackground>
+                  </PressableScale>
+
+                  <PressableScale onPress={handleSignOut}>
+                    <ImageBackground
+                      source={A.pillRed}
+                      resizeMode="stretch"
+                      style={s.ctaPill}
+                    >
+                      <Text style={s.ctaText}>sign out</Text>
+                    </ImageBackground>
+                  </PressableScale>
+                </View>
+              </ScrollView>
+            </ImageBackground>
+          </View>
         </View>
-
-        <Button
-          title={saving ? "Saving…" : "Save changes"}
-          onPress={onSave}
-          disabled={saving}
-        />
-      </ScrollView>
+      </ImageBackground>
     </KeyboardAvoidingView>
   );
 }
 
-
 const s = StyleSheet.create({
   bg: { flex: 1, width: "100%", height: "100%" },
+  container: { flex: 1, alignItems: "center", justifyContent: "center" },
   center: { width: "100%", maxWidth: 440, alignItems: "center" },
   panel: {
     width: 360,
@@ -314,9 +404,20 @@ const s = StyleSheet.create({
     paddingHorizontal: 18,
   },
 
-  closeWrap: { position: "absolute", top: -8, right: -6 },
-  close: { width: 58, height: 58, alignItems: "center", justifyContent: "center" },
-  closeX: { fontFamily: "PixelifySans_700", fontSize: 26, color: BROWN, lineHeight: 26, textAlign: "center" },
+  closeWrap: { position: "absolute", top: -8, right: -6, zIndex: 10 },
+  close: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  closeX: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 26,
+    color: BROWN,
+    lineHeight: 26,
+    textAlign: "center",
+  },
 
   titlePill: {
     width: 220,
@@ -345,7 +446,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  camIcon: { width: 28, height: 28},
+  camIcon: { width: 28, height: 28 },
 
   inputPill: {
     width: 280,
