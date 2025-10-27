@@ -18,6 +18,7 @@ export type UserProfile = {
   weight?: number | null; // in lbs null if not set
   height?: number | null; // in ft null if not set
   age?: number | null; // in years null if not set
+  profilePicture?: number;
 };
 
 
@@ -47,6 +48,7 @@ export async function ensureUserProfile(
       weight: initialData.weight ?? null,
       height: initialData.height ?? null,
       age: initialData.age ?? null,
+      profilePicture: initialData.profilePicture ?? null
     });
   }
 }

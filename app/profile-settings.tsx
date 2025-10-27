@@ -14,6 +14,7 @@ import {
   Image,
   ImageBackground,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -53,6 +54,14 @@ const A = {
     return require("../assets/maiArt/camera.png");
   })(),
 };
+
+// Preset avatar options
+const PRESET_AVATARS = [
+  { id: 1, source: require("../assets/no_image.jpg") },
+  { id: 2, source: require("../assets/pink_profile.jpg") },
+  { id: 3, source: require("../assets/no_image.jpg") },
+  { id: 4, source: require("../assets/no_image.jpg") },
+];
 
 const BROWN = "#623B2A";
 
@@ -128,6 +137,10 @@ export default function ProfileSettingsScreen() {
   const [weight, setWeight] = useState<string>(""); // in lbs
   const [height, setHeight] = useState<string>(""); // in ft
   const [age, setAge] = useState<string>(""); // in years
+  const [profilePicture, setProfilePicture] = useState<number>(1); // Avatar ID
+
+  // Avatar picker modal state
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // Load user profile on mount or when user changes
   useEffect(() => {
@@ -150,6 +163,7 @@ export default function ProfileSettingsScreen() {
           setWeight(profile.weight?.toString() ?? "");
           setHeight(profile.height?.toString() ?? "");
           setAge(profile.age?.toString() ?? "");
+          setProfilePicture(profile.profilePicture ?? 1);
         }
       } catch (err: any) {
         Alert.alert("Error", err?.message ?? "Failed to load profile");
@@ -177,6 +191,7 @@ export default function ProfileSettingsScreen() {
           typeof stepGoal === "number" && !Number.isNaN(stepGoal)
             ? stepGoal
             : undefined,
+        profilePicture,
       };
 
       await updateUserProfile(user.uid, patch);
@@ -209,6 +224,14 @@ export default function ProfileSettingsScreen() {
   const handleClose = () => {
     router.back();
   };
+
+  const handleSelectAvatar = (avatarId: number) => {
+    setProfilePicture(avatarId);
+    setShowAvatarPicker(false);
+  };
+
+  // Get current avatar source
+  const currentAvatar = PRESET_AVATARS.find((a) => a.id === profilePicture)?.source || PRESET_AVATARS[0].source;
 
   // Render loading state
   if (loading) {
@@ -287,15 +310,13 @@ export default function ProfileSettingsScreen() {
                   style={s.avatarRing}
                 >
                   <Image
-                    source={A.sprout}
+                    source={currentAvatar}
                     style={s.avatar}
                     resizeMode="contain"
                   />
                   <PressableScale
                     style={s.camBtn}
-                    onPress={() =>
-                      Alert.alert("Avatar", "Open camera/gallery here.")
-                    }
+                    onPress={() => setShowAvatarPicker(true)}
                   >
                     <Image
                       source={A.cam}
@@ -387,6 +408,63 @@ export default function ProfileSettingsScreen() {
             </ImageBackground>
           </View>
         </View>
+
+        {/* Avatar Picker Modal */}
+        <Modal
+          visible={showAvatarPicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowAvatarPicker(false)}
+        >
+          <Pressable
+            style={s.modalOverlay}
+            onPress={() => setShowAvatarPicker(false)}
+          >
+            <View style={s.modalContent}>
+              <ImageBackground
+                source={A.panel}
+                resizeMode="contain"
+                style={s.modalPanel}
+              >
+                <Text style={s.modalTitle}>choose avatar</Text>
+                
+                <View style={s.avatarGrid}>
+                  {PRESET_AVATARS.map((avatar) => (
+                    <PressableScale
+                      key={avatar.id}
+                      onPress={() => handleSelectAvatar(avatar.id)}
+                    >
+                      <ImageBackground
+                        source={A.avatarRing}
+                        resizeMode="stretch"
+                        style={[
+                          s.avatarOption,
+                          profilePicture === avatar.id && s.avatarSelected,
+                        ]}
+                      >
+                        <Image
+                          source={avatar.source}
+                          style={s.avatarOptionImg}
+                          resizeMode="contain"
+                        />
+                      </ImageBackground>
+                    </PressableScale>
+                  ))}
+                </View>
+
+                <PressableScale onPress={() => setShowAvatarPicker(false)}>
+                  <ImageBackground
+                    source={A.pillRed}
+                    resizeMode="stretch"
+                    style={s.modalCloseBtn}
+                  >
+                    <Text style={s.ctaText}>close</Text>
+                  </ImageBackground>
+                </PressableScale>
+              </ImageBackground>
+            </View>
+          </Pressable>
+        </Modal>
       </ImageBackground>
     </KeyboardAvoidingView>
   );
@@ -480,4 +558,57 @@ const s = StyleSheet.create({
 
   centerLoading: { flex: 1, alignItems: "center", justifyContent: "center" },
   loadingTxt: { marginTop: 8, fontFamily: "PixelifySans_700", color: BROWN },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalContent: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalPanel: {
+    width: 340,
+    height: 480,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+  },
+  modalTitle: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 24,
+    color: BROWN,
+    marginBottom: 20,
+  },
+  avatarGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 16,
+    marginBottom: 24,
+  },
+  avatarOption: {
+    width: 120,
+    height: 120,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarSelected: {
+    opacity: 1,
+    transform: [{ scale: 1.05 }],
+  },
+  avatarOptionImg: {
+    width: 72,
+    height: 72,
+  },
+  modalCloseBtn: {
+    width: 135,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
