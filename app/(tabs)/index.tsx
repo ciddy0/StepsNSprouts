@@ -12,13 +12,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  Image,
-  TextInput,
 } from "react-native";
 
 export default function HomeScreen() {
@@ -52,6 +52,12 @@ export default function HomeScreen() {
     5: require("../../assets/maiArt/tree0/tree_stage_5.png"),
     6: require("../../assets/maiArt/tree0/tree_stage_6.png"),
   };
+  const PRESET_AVATARS = [
+  { id: 1, source: require("../../assets/duck.png") },
+  { id: 2, source: require("../../assets/duck2.png") },
+  { id: 3, source: require("../../assets/no_image.jpg") },
+  { id: 4, source: require("../../assets/no_image.jpg") },
+];
 
   // DELETE THIS LATER JUST FOR DEMO HEHE HAHA
   const [growthLevel, setGrowthLevel] = useState(0);
@@ -135,6 +141,10 @@ export default function HomeScreen() {
 
     fetchUserData();
   }, [user]);
+  const getAvatarSource = (avatarId: number) => {
+  const avatar = PRESET_AVATARS.find(a => a.id === avatarId);
+  return avatar ? avatar.source : require("../../assets/no_image.jpg");
+};
 
   // Refetch data when screen comes into focus
   useFocusEffect(
@@ -323,6 +333,11 @@ export default function HomeScreen() {
           </Text>
           <Text>Current Streak: {userData.currentStreak} days 🔥</Text>
           <Text>Longest Streak: {userData.longestStreak} days</Text>
+          <Image
+  source={getAvatarSource(userData.profilePicture)}
+  style={{ width: 100, height: 100, borderRadius: 50 }}
+  resizeMode="contain"
+/>
           <Text>Profile Picture: {userData.profilePicture || "Not set"}</Text>
           <Text>Tree level: {userData.garden.tree.growthLevel}</Text>
           <TextInput
