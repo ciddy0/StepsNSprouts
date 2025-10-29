@@ -276,7 +276,7 @@ export default function SignUpScreen() {
             </ImageBackground>
 
             {/* confirm password */}
-            <Text style={[styles.fieldLabel, { marginTop: 10 }]}>confirm</Text>
+            <Text style={[styles.fieldLabel, { marginTop: 10 }]}>confirm password</Text>
             <ImageBackground
               source={A.longbutton}
               resizeMode="stretch"
@@ -295,7 +295,12 @@ export default function SignUpScreen() {
               />
             </ImageBackground>
 
-            {/* Google pill */}
+           
+          </ImageBackground>
+
+          {/* bottom CTA */}
+          <View style={styles.bottomBtns}>
+             {/* Google pill */}
             <Pressable 
               style={{ width: "100%", marginTop: 10 }}
               onPress={() => promptAsync()}
@@ -311,10 +316,7 @@ export default function SignUpScreen() {
                 <Text style={styles.googleText}>via google</Text>
               </ImageBackground>
             </Pressable>
-          </ImageBackground>
 
-          {/* bottom CTA */}
-          <View style={styles.bottomBtns}>
             <PressableScale onPress={handleSignup} disabled={loading}>
               <ImageBackground
                 source={A.yellowB}
@@ -349,61 +351,89 @@ const styles = StyleSheet.create({
   center: { width: "100%", maxWidth: 440, alignItems: "center" },
 
   panel: {
-    width: 340,
-    height: 660,
+    width: 300,
+    height: 520,
     alignItems: "center",
-    paddingTop: 28,
+    marginTop: 90,
     paddingHorizontal: 22,
+    paddingTop: 80,      
+    overflow: "visible",
   },
-  closeBadge: { position: "absolute", top: -8, right: -6, width: 64, height: 64 },
-
+  closeBadge: { position: "absolute", top: -6, right: -4, width: 56, height: 56 },
   titlePill: {
-    width: 220,
+    position: "absolute",
+    top: -26,
+    width: 180,
     height: 54,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 6,
+    zIndex: 5,
   },
   panelTitle: {
     fontFamily: "PixelifySans_700",
-    fontSize: 28,
+    fontSize: 35,
     color: "#623B2A",
   },
 
+  formArea: {
+  width: "84%",        
+  alignSelf: "center",
+},
+
   fieldLabel: {
-    width: "100%",
-    fontFamily: "PixelifySans_700",
-    fontSize: 18,
-    color: "#623B2A",
-    marginBottom: 4,
-    textAlign: "center", 
-    alignSelf: "center",
-  },
+  width: "100%",
+  fontFamily: "PixelifySans_700",
+  fontSize: 20,
+  color: "#623B2A",
+
+
+  textAlign: "center",
+            
+},
   inputWrap: {
-    width: "100%",
+    width: "90%",
     height: 54,
     justifyContent: "center",
-    paddingHorizontal: 16,
+    alignItems: "center",
+    paddingHorizontal: 14,
+    alignSelf: "center",
+
+    marginLeft: 40,
   },
   input: {
     fontFamily: "PixelifySans_700",
     fontSize: 18,
     color: "#3B2A27",
+    textAlign: "center", 
+    width: "75%", 
+    marginLeft: -50,
   },
 
   googlePill: {
-    width: "100%",
-    height: 54,
+    width: 220,
+    gap:14,
+    height: 68,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     columnGap: 10,
   },
-  gLogo: { width: 22, height: 22, marginRight: 4 },
+  gLogo: { width: 22, height: 22, marginRight: 8 },
   googleText: { fontFamily: "PixelifySans_700", fontSize: 18, color: "#623B2A" },
 
-  bottomBtns: { marginTop: 14, gap: 16, alignItems: "center" },
-  button: { width: 220, height: 70, alignItems: "center", justifyContent: "center" },
+  forgot: {
+    marginTop: 30,
+    fontFamily: "PixelifySans_700",
+    fontSize: 20,
+    color: "#623B2A",
+    alignSelf: "flex-start",
+    marginLeft:35,
+
+  },
+
+  bottomBtns: { marginTop: 10, gap: 14, alignItems: "center" },
+  button: { width: 220, height: 68, alignItems: "center", justifyContent: "center" },
   btnText: {
     fontFamily: "PixelifySans_700",
     fontSize: 22,

@@ -147,90 +147,61 @@ export default function LoginScreen() {
       >
         <View style={styles.center}>
           {/* PANEL */}
-          <ImageBackground
-            source={A.panel}
-            resizeMode="contain"
-            style={styles.panel}
-            imageStyle={pixelArtWebOnly}
-          >
-            {/* Close badge (decor) */}
-            <Image source={A.close} resizeMode="contain" style={styles.closeBadge} />
+          <ImageBackground source={A.panel} resizeMode="contain" style={styles.panel} imageStyle={pixelArtWebOnly}>
+  <Image source={A.close} resizeMode="contain" style={styles.closeBadge} />
 
-            {/* Title */}
-            <ImageBackground
-              source={A.longbutton}
-              resizeMode="stretch"
-              style={styles.titlePill}
-              imageStyle={pixelArtWebOnly}
-            >
-              <Text style={styles.panelTitle}>login</Text>
-            </ImageBackground>
+  {/* Title pill */}
+  <ImageBackground source={A.longbutton} resizeMode="stretch" style={styles.titlePill} imageStyle={pixelArtWebOnly}>
+    <Text style={styles.panelTitle}>login</Text>
+  </ImageBackground>
 
-            {/* Email */}
-            <Text style={styles.fieldLabel}>email</Text>
-            <ImageBackground
-              source={A.longbutton}
-              resizeMode="stretch"
-              style={styles.inputWrap}
-              imageStyle={pixelArtWebOnly}
-            >
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                placeholder=""
-                placeholderTextColor="#623B2A"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                editable={!loading}
-              />
-            </ImageBackground>
+  <View style={styles.formArea}>
+    <Text style={styles.fieldLabel}>email</Text>
+    <ImageBackground source={A.greylongbutton} resizeMode="stretch" style={styles.inputWrap} imageStyle={pixelArtWebOnly}>
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+        placeholder=""
+        placeholderTextColor="#623B2A"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        editable={!loading}
+      />
+    </ImageBackground>
 
-            {/* Password */}
-            <Text style={[styles.fieldLabel, { marginTop: 10 }]}>password</Text>
-            <ImageBackground
-              source={A.longbutton}
-              resizeMode="stretch"
-              style={styles.inputWrap}
-              imageStyle={pixelArtWebOnly}
-            >
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-                placeholder=""
-                placeholderTextColor="#623B2A"
-                secureTextEntry
-                autoCapitalize="none"
-                editable={!loading}
-              />
-            </ImageBackground>
+    <Text style={[styles.fieldLabel, { marginTop: 10 }]}>password</Text>
+    <ImageBackground source={A.greylongbutton} resizeMode="stretch" style={styles.inputWrap} imageStyle={pixelArtWebOnly}>
+      <TextInput
+        value={password}
+        onChangeText={setPassword}
+        style={styles.input}
+        placeholder=""
+        placeholderTextColor="#623B2A"
+        secureTextEntry
+        autoCapitalize="none"
+        editable={!loading}
+      />
+    </ImageBackground>
 
-            {/* Google pill */}
-            <Pressable 
-              style={{ width: "100%", marginTop: 10 }}
-              onPress={() => promptAsync()}
-              disabled={!request || loading}
-            >
-              <ImageBackground
-                source={A.greylongbutton}
-                resizeMode="stretch"
-                style={styles.googlePill}
-                imageStyle={pixelArtWebOnly}
-              >
-                <Image source={A.gLogo} style={styles.gLogo} resizeMode="contain" />
-                <Text style={styles.googleText}>via google</Text>
-              </ImageBackground>
-            </Pressable>
+    
 
-            {/* forgot password */}
-            <Pressable disabled={loading}>
-              <Text style={styles.forgot}>forgot password?</Text>
-            </Pressable>
-          </ImageBackground>
+    <Pressable disabled={loading}>
+      <Text style={styles.forgot}>forgot password?</Text>
+    </Pressable>
+  </View>
+</ImageBackground>
 
           {/* bottom CTAs */}
           <View style={styles.bottomBtns}>
+
+            
+    <Pressable onPress={() => promptAsync()} disabled={!request || loading} style={{ marginTop: 10 }}>
+      <ImageBackground source={A.greylongbutton} resizeMode="stretch" style={styles.googlePill} imageStyle={pixelArtWebOnly}>
+        <Image source={A.gLogo} style={styles.gLogo} resizeMode="contain" />
+        <Text style={styles.googleText}>via google</Text>
+      </ImageBackground>
+    </Pressable>
             <PressableScale onPress={handleLogin} disabled={loading}>
               <ImageBackground
                 source={A.yellowB}
@@ -272,68 +243,88 @@ const styles = StyleSheet.create({
   center: { width: "100%", maxWidth: 440, alignItems: "center" },
 
   panel: {
-    width: 340,
-    height: 560,
+    width: 300,
+    height: 520,
     alignItems: "center",
-    paddingTop: 28,
+    marginTop: 90,
     paddingHorizontal: 22,
+    paddingTop: 80,      
+    overflow: "visible",
   },
-  closeBadge: { position: "absolute", top: -8, right: -6, width: 64, height: 64 },
-
+  closeBadge: { position: "absolute", top: -6, right: -4, width: 56, height: 56 },
   titlePill: {
-    width: 220,
+    position: "absolute",
+    top: -26,
+    width: 180,
     height: 54,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 6,
+    zIndex: 5,
   },
   panelTitle: {
     fontFamily: "PixelifySans_700",
-    fontSize: 28,
+    fontSize: 35,
     color: "#623B2A",
   },
 
+  formArea: {
+  width: "84%",        
+  alignSelf: "center",
+},
+
   fieldLabel: {
-    width: "100%",
-    fontFamily: "PixelifySans_700",
-    fontSize: 18,
-    color: "#623B2A",
-    marginBottom: 4,
-    textAlign: "center",
-    alignSelf: "center",
-  },
+  width: "100%",
+  fontFamily: "PixelifySans_700",
+  fontSize: 30,
+  color: "#623B2A",
+  marginBottom: 6,
+
+  textAlign: "center",
+            
+},
   inputWrap: {
-    width: "100%",
+    width: "90%",
     height: 54,
     justifyContent: "center",
-    paddingHorizontal: 16,
+    alignItems: "center",
+    paddingHorizontal: 14,
+    alignSelf: "center",
+    marginBottom: 8,
+    marginLeft: 40,
   },
   input: {
     fontFamily: "PixelifySans_700",
     fontSize: 18,
     color: "#3B2A27",
+    textAlign: "center", 
+    width: "75%", 
+    marginLeft: -50,
   },
 
   googlePill: {
-    width: "100%",
-    height: 54,
+    width: 200,
+    gap:14,
+    height: 68,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     columnGap: 10,
   },
-  gLogo: { width: 22, height: 22, marginRight: 4 },
+  gLogo: { width: 22, height: 22, marginRight: 8 },
   googleText: { fontFamily: "PixelifySans_700", fontSize: 18, color: "#623B2A" },
 
   forgot: {
-    marginTop: 8,
     fontFamily: "PixelifySans_700",
-    fontSize: 16,
+    fontSize: 20,
     color: "#623B2A",
+    alignSelf: "flex-start",
+    marginLeft:35,
+
   },
 
-  bottomBtns: { marginTop: 14, gap: 16, alignItems: "center" },
-  button: { width: 220, height: 70, alignItems: "center", justifyContent: "center" },
+  bottomBtns: { marginTop: 10, gap: 14, alignItems: "center" },
+  button: { width: 220, height: 68, alignItems: "center", justifyContent: "center" },
   btnText: {
     fontFamily: "PixelifySans_700",
     fontSize: 22,
@@ -346,4 +337,5 @@ const styles = StyleSheet.create({
           textShadowRadius: 0,
         }),
   },
+  altLink: { fontFamily: "PixelifySans_700", fontSize: 16, color: "#623B2A", marginTop: 4 },
 });
