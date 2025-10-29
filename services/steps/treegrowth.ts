@@ -8,7 +8,10 @@ export const TREE_STAGES: TreeGrowthStage[] = [
     { stage: 1, daysRequired: 0, name: "Seed" },
     { stage: 2, daysRequired: 5, name: "Sprout" },
     { stage: 3, daysRequired: 12, name: "Sapling" },
-    { stage: 4, daysRequired: 30, name: "Mature Tree" }
+    { stage: 4, daysRequired: 30, name: "Mature Tree" },
+    { stage: 5, daysRequired: 30, name: "Flower Tree" },
+    { stage: 6, daysRequired: 30, name: "Fruit Tree" }
+
 ];
 
 export function calculateTreeStage(consecutiveDaysReached: number): number {
