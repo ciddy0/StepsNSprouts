@@ -59,8 +59,8 @@ const A = {
 const PRESET_AVATARS = [
   { id: 1, source: require("../assets/duck.png") },
   { id: 2, source: require("../assets/duck2.png") },
-  { id: 3, source: require("../assets/no_image.jpg") },
-  { id: 4, source: require("../assets/no_image.jpg") },
+  { id: 3, source: require("../assets/flowerPic.png") },
+  { id: 4, source: require("../assets/sprout_profile.png") },
 ];
 
 const BROWN = "#623B2A";
