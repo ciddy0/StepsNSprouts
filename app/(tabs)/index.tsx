@@ -42,22 +42,23 @@ export default function HomeScreen() {
   // Auto-sync interval reference
   const syncIntervalRef = useRef<number | null>(null);
 
-  const treeImageMap = {
-    0: require("../../assets/maiArt/tree0/tree_stage_0.png"),
-    1: require("../../assets/maiArt/tree0/tree_stage_1.png"),
-    2: require("../../assets/maiArt/tree0/tree_stage_2.png"),
-    2: require("../../assets/maiArt/tree0/tree_stage_2.png"),
-    3: require("../../assets/maiArt/tree0/tree_stage_3.png"),
-    4: require("../../assets/maiArt/tree0/tree_stage_4.png"),
-    5: require("../../assets/maiArt/tree0/tree_stage_5.png"),
-    6: require("../../assets/maiArt/tree0/tree_stage_6.png"),
-  };
-  const PRESET_AVATARS = [
+ const treeImageMap: { [key: number]: any } = {
+  0: require("../../assets/maiArt/tree0/tree_stage_0.png"),
+  1: require("../../assets/maiArt/tree0/tree_stage_1.png"),
+  2: require("../../assets/maiArt/tree0/tree_stage_2.png"),
+  3: require("../../assets/maiArt/tree0/tree_stage_3.png"),
+  4: require("../../assets/maiArt/tree0/tree_stage_4.png"),
+  5: require("../../assets/maiArt/tree0/tree_stage_5.png"),
+  6: require("../../assets/maiArt/tree0/tree_stage_6.png"),
+};
+  
+  const PRESET_AVATARS: { id: number; source: any }[] = [
   { id: 1, source: require("../../assets/duck.png") },
   { id: 2, source: require("../../assets/duck2.png") },
   { id: 3, source: require("../../assets/flowerPic.png") },
   { id: 4, source: require("../../assets/sprout_profile.png") },
 ];
+
 
   // DELETE THIS LATER JUST FOR DEMO HEHE HAHA
   const [growthLevel, setGrowthLevel] = useState(0);
@@ -100,15 +101,38 @@ export default function HomeScreen() {
   // Setup auto-sync when user is available
   useEffect(() => {
     if (user) {
-      // Initial sync
-      fetchStepsData();
+      // Initial sync on mount
+      const doInitialSync = async () => {
+        try {
+          console.log("[HomeScreen] Performing initial sync...");
+          await syncTodaysStepsFromHealthKit(user.uid);
+          // Fetch data after initial sync
+          await fetchStepsData();
+          // Fetch user data to get tree level
+          const updatedUserData = await getUserDocument(user.uid);
+          setUserData(updatedUserData);
+        } catch (err) {
+          console.error("Initial sync failed:", err);
+        }
+      };
+      
+      doInitialSync();
 
       // Setup auto-sync every 15 minutes
       const intervalId = setInterval(
-        () => {
-          syncTodaysStepsFromHealthKit(user.uid).catch((err) => {
+        async () => {
+          try {
+            console.log("[HomeScreen] Auto-syncing steps...");
+            // Sync to Firebase
+            await syncTodaysStepsFromHealthKit(user.uid);
+            // Fetch updated data to refresh UI
+            await fetchStepsData();
+            // Also refresh user data to get updated tree level
+            const updatedUserData = await getUserDocument(user.uid);
+            setUserData(updatedUserData);
+          } catch (err) {
             console.error("Auto-sync failed:", err);
-          });
+          }
         },
         15 * 60 * 1000
       ); // 15 minutes
@@ -141,10 +165,11 @@ export default function HomeScreen() {
 
     fetchUserData();
   }, [user]);
+  
   const getAvatarSource = (avatarId: number) => {
-  const avatar = PRESET_AVATARS.find(a => a.id === avatarId);
-  return avatar ? avatar.source : require("../../assets/no_image.jpg");
-};
+    const avatar = PRESET_AVATARS.find(a => a.id === avatarId);
+    return avatar ? avatar.source : require("../../assets/no_image.jpg");
+  };
 
   // Refetch data when screen comes into focus
   useFocusEffect(
@@ -152,10 +177,12 @@ export default function HomeScreen() {
       const refetchOnFocus = async () => {
         if (user) {
           try {
+            // Only fetch cached data, don't sync
+            // Syncing is handled by the auto-sync interval
             const data = await getUserDocument(user.uid);
             setUserData(data);
 
-            // Also refresh steps
+            // Refresh steps from cache
             await fetchStepsData();
           } catch (error) {
             console.error("Error fetching data on focus:", error);
@@ -334,23 +361,63 @@ export default function HomeScreen() {
           <Text>Current Streak: {userData.currentStreak} days 🔥</Text>
           <Text>Longest Streak: {userData.longestStreak} days</Text>
           <Image
-  source={getAvatarSource(userData.profilePicture)}
-  style={{ width: 100, height: 100, borderRadius: 50 }}
-  resizeMode="contain"
-/>
+            source={getAvatarSource(userData.profilePicture)}
+            style={{ width: 100, height: 100, borderRadius: 50 }}
+            resizeMode="contain"
+          />
           <Text>Profile Picture: {userData.profilePicture || "Not set"}</Text>
           <Text>Tree level: {userData.garden.tree.growthLevel}</Text>
-          <TextInput
-            keyboardType="numeric"
-            value={growthLevel}
-            onChangeText={(num) => {
-              if (num >= 6) setGrowthLevel(6);
-              else if (num <= 0) setGrowthLevel(0);
-              else setGrowthLevel(num);
-            }}
-            placeholder="Tree Growth Level"
-          />
-          <Image source={treeImageMap[growthLevel]} />
+          <Text>Tree total steps: {userData.garden.tree.totalStepsContributed}</Text>
+          
+          {/* Display tree based on user's actual growth level */}
+          <View style={{ marginTop: 20, alignItems: "center" }}>
+            <Image 
+              source={treeImageMap[userData.garden.tree.growthLevel] || treeImageMap[0]} 
+              style={{ width: 200, height: 200, marginVertical: 10 }}
+              resizeMode="contain"
+            />
+            <Text style={{ fontSize: 14, color: "#666", marginTop: 5 }}>
+              Level {userData.garden.tree.growthLevel} / 6
+            </Text>
+            <Text style={{ fontSize: 12, color: "#999" }}>
+              {userData.garden.tree.totalStepsContributed.toLocaleString()} steps contributed
+            </Text>
+            <Text style={{ fontSize: 12, color: "#999" }}>
+              Next level: {((userData.garden.tree.growthLevel + 1) * 10000).toLocaleString()} steps
+            </Text>
+          </View>
+
+          {/* Demo section - DELETE THIS LATER */}
+          <View style={{ marginTop: 30, padding: 15, backgroundColor: "#fff3cd", borderRadius: 8 }}>
+            <Text style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#856404" }}>
+              🎨 Demo Tree Preview (DELETE LATER)
+            </Text>
+            <TextInput
+              keyboardType="numeric"
+              value={String(growthLevel)}
+              onChangeText={(text) => {
+                const num = parseInt(text) || 0;
+                if (num >= 6) setGrowthLevel(6);
+                else if (num <= 0) setGrowthLevel(0);
+                else setGrowthLevel(num);
+              }}
+              placeholder="Tree Growth Level"
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                padding: 8,
+                borderRadius: 4,
+                marginTop: 8,
+                marginBottom: 8,
+                backgroundColor: "white",
+              }}
+            />
+            <Image 
+              source={treeImageMap[growthLevel]} 
+              style={{ width: 150, height: 150, marginVertical: 10, alignSelf: "center" }}
+              resizeMode="contain"
+            />
+          </View>
 
           <TouchableOpacity
             onPress={() => router.push("/profile-settings")}

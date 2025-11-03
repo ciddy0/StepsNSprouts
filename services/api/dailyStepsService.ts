@@ -16,7 +16,7 @@ import {
 import { DailySteps } from "../firebase/collections/dailySteps";
 import { db } from "../firebase/config";
 import { getTodaysSteps } from "../steps";
-import { getUserDocument, updateUserProfile } from "./userService";
+import { getUserDocument, updateUserGarden, updateUserProfile } from "./userService";
 
 /**
  * Get daily steps for a specific date
@@ -44,6 +44,10 @@ export async function setDailySteps(
 ): Promise<void> {
   const dailyStepsRef = doc(db, `users/${userId}/dailySteps`, date);
   
+  // Get previous steps for this day (if any)
+  const existingDaySteps = await getDailySteps(userId, date);
+  const previousSteps = existingDaySteps?.steps || 0;
+  
   const dailyStepsData: DailySteps = {
     id: date,
     userId,
@@ -54,8 +58,34 @@ export async function setDailySteps(
   
   await setDoc(dailyStepsRef, dailyStepsData);
   
+  // Calculate the difference in steps
+  const stepDifference = steps - previousSteps;
+  
   // Update user's total steps
   await updateTotalSteps(userId);
+  
+  // Update tree's totalStepsContributed if there are new steps
+  if (stepDifference > 0) {
+    await updateTreeSteps(userId, stepDifference);
+  }
+}
+
+/**
+ * Update tree's totalStepsContributed and calculate growth level
+ */
+async function updateTreeSteps(userId: string, additionalSteps: number): Promise<void> {
+  const user = await getUserDocument(userId);
+  if (!user) throw new Error("User not found");
+  
+  const tree = { ...user.garden.tree };
+  tree.totalStepsContributed += additionalSteps;
+  
+  // Growth logic: every 10,000 steps = 1 growth level (max level 6)
+  tree.growthLevel = Math.min(Math.floor(tree.totalStepsContributed / 10000), 6);
+  
+  await updateUserGarden(userId, { tree });
+  
+  console.log(`[Tree] Updated: +${additionalSteps} steps, total: ${tree.totalStepsContributed}, level: ${tree.growthLevel}`);
 }
 
 /**
@@ -73,7 +103,7 @@ export async function syncTodaysStepsFromHealthKit(userId: string): Promise<{
     // Get today's date in ISO format
     const today = new Date().toISOString().split('T')[0];
     
-    // Save to Firestore
+    // Save to Firestore (this will also update tree)
     await setDailySteps(userId, today, steps);
     
     // Update streak after syncing
@@ -106,20 +136,14 @@ export async function getTodaysStepsWithProgress(userId: string): Promise<{
   const today = new Date().toISOString().split('T')[0];
   const todaySteps = await getDailySteps(userId, today);
   
-  // If we have cached data, use it; otherwise fetch fresh
-  let steps: number;
+  // Use cached data if available, otherwise return zeros
+  // Syncing should be done explicitly via syncTodaysStepsFromHealthKit
+  let steps: number = 0;
   let lastSynced: string | null = null;
   
   if (todaySteps) {
     steps = todaySteps.steps;
     lastSynced = todaySteps.lastSynced;
-  } else {
-    // Fetch fresh from HealthKit
-    const syncResult = await syncTodaysStepsFromHealthKit(userId);
-    steps = syncResult.steps;
-    // Fetch the newly created record to get lastSynced
-    const newTodaySteps = await getDailySteps(userId, today);
-    lastSynced = newTodaySteps?.lastSynced || null;
   }
   
   // Calculate progress based on cached steps
