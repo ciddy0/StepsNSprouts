@@ -5,6 +5,7 @@ import {
   getDoc,
   getDocs,
   query,
+  runTransaction,
   setDoc,
   updateDoc,
   where
@@ -307,4 +308,53 @@ export async function waterTree(
   tree.growthLevel = Math.floor(tree.totalStepsContributed / 10000);
   
   await updateUserGarden(userId, { tree });
+}
+
+/**
+ * Atomically charge the user and add one decoration instance to embedded inventory.
+ * Returns the newBalance and generated instanceId.
+ */
+export async function buyMysteryBoxAndAddToInventory(
+  userId: string,
+  decorationId: string,
+  price: number
+): Promise<{ instanceId: string; newBalance: number }> {
+  const userRef = doc(db, "users", userId);
+
+  return await runTransaction(db, async (tx) => {
+    const snap = await tx.get(userRef);
+    if (!snap.exists()) throw new Error("User not found");
+    const user = snap.data() as User;
+
+    const balance = user.pomes ?? 0;
+    if (balance < price) {
+      throw new Error(`Insufficient pomes: need ${price}, have ${balance}`);
+    }
+
+    // Build new instance and updated inventory
+    const instanceId = `inst-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newInstance = {
+      instanceId,
+      name: null as string | null,
+      dateAcquired: new Date().toISOString()
+    };
+
+    const inventory = [...(user.inventory ?? [])];
+    const existing = inventory.find(i => i.decorationId === decorationId);
+    if (existing) {
+      existing.instances = [...existing.instances, newInstance];
+    } else {
+      inventory.push({ decorationId, instances: [newInstance] });
+    }
+
+    const newBalance = balance - price;
+
+    tx.update(userRef, {
+      pomes: newBalance,
+      inventory,
+      lastActive: new Date().toISOString()
+    });
+
+    return { instanceId, newBalance };
+  });
 }
