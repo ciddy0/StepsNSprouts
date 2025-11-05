@@ -11,21 +11,9 @@ export interface ShopItem {
 
 export const SHOP_ITEMS: ShopItem[] = [
   {
-    id: "lootbox-bronze",
+    id: "lootbox",
     type: "lootbox",
-    name: "Bronze Mystery Box",
-    price: 100,
-    imagePath: "assets/shop/lootbox_bronze.png",
-    lootTable: [
-      { itemId: "dog", weight: 40 },
-      { itemId: "flower1", weight: 40 },
-      { itemId: "cat", weight: 20 }
-    ]
-  },
-  {
-    id: "lootbox-silver",
-    type: "lootbox",
-    name: "Silver Mystery Box",
+    name: "Mystery Box",
     price: 500,
     imagePath: "assets/shop/lootbox_silver.png",
     lootTable: [
