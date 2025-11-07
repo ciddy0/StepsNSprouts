@@ -1,4 +1,5 @@
 // app/profile-settings.tsx
+import calculateDailySteps from "@/services/steps/stepGoalCalculator";
 import { useAuth } from "@/context/AuthContext";
 import {
   ensureUserProfile,
@@ -92,14 +93,20 @@ function BlueInput({
   keyboardType,
   secureTextEntry,
   autoCapitalize,
+  onChange,
 }: {
   value: string;
   onChangeText: (t: string) => void;
+  onChange?: (t: string) => void;
   placeholder: string;
   keyboardType?: "default" | "number-pad";
   secureTextEntry?: boolean;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
 }) {
+  const handleChangeText = (text: string) => {
+    onChangeText(text); // always update the bound value
+    onChange?.(text); // optionally notify parent
+  };
   return (
     <ImageBackground
       source={A.pillBlue}
@@ -108,7 +115,7 @@ function BlueInput({
     >
       <TextInput
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={handleChangeText}
         placeholder={placeholder}
         placeholderTextColor="#f7f0d3"
         keyboardType={keyboardType ?? "default"}
@@ -129,7 +136,9 @@ export default function ProfileSettingsScreen() {
   // Local state for profile data and loading/saving states
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
+  const [suggestedStepGoal, setSuggestedStepGoal] = useState(10000);
+
   // Profile fields
   const [stepGoal, setStepGoal] = useState<number | undefined>(undefined);
   const [firstName, setFirstName] = useState("");
@@ -176,6 +185,17 @@ export default function ProfileSettingsScreen() {
   }, [user]);
 
   // Handler for saving profile changes
+
+  const getSuggestedStepGoal = (): number => {
+    const w = weight ? Number(weight) : null;
+    const h = height ? Number(height) : null;
+    const a = age ? Number(age) : null;
+
+    if (w && h && a && !isNaN(w) && !isNaN(h) && !isNaN(a)) {
+      return calculateDailySteps(w, a, h);
+    }
+    return 10000;
+  };
   const onSave = async () => {
     if (!user) return;
     try {
@@ -202,6 +222,15 @@ export default function ProfileSettingsScreen() {
       setSaving(false);
     }
   };
+
+  `{(() => {
+  const suggested = getSuggestedStepGoal();
+  return suggested ? (
+    <Text style={{ marginTop: 8, color: '#666', fontSize: 14 }}>
+      Suggested step goal: {suggested.toLocaleString()}
+    </Text>
+  ) : null;
+})()}`;
 
   const handleSignOut = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -231,7 +260,9 @@ export default function ProfileSettingsScreen() {
   };
 
   // Get current avatar source
-  const currentAvatar = PRESET_AVATARS.find((a) => a.id === profilePicture)?.source || PRESET_AVATARS[0].source;
+  const currentAvatar =
+    PRESET_AVATARS.find((a) => a.id === profilePicture)?.source ||
+    PRESET_AVATARS[0].source;
 
   // Render loading state
   if (loading) {
@@ -262,11 +293,7 @@ export default function ProfileSettingsScreen() {
       behavior={Platform.select({ ios: "padding", android: undefined })}
       style={{ flex: 1 }}
     >
-      <ImageBackground
-        source={A.bg}
-        resizeMode="cover"
-        style={s.bg}
-      >
+      <ImageBackground source={A.bg} resizeMode="cover" style={s.bg}>
         <View style={s.container}>
           <View style={s.center}>
             {/* wood panel */}
@@ -344,18 +371,21 @@ export default function ProfileSettingsScreen() {
                   onChangeText={setWeight}
                   placeholder="weight (lbs)"
                   keyboardType="number-pad"
+                  onChange={() => setSuggestedStepGoal(getSuggestedStepGoal())}
                 />
                 <BlueInput
                   value={height}
                   onChangeText={setHeight}
                   placeholder="height (inches)"
                   keyboardType="number-pad"
+                  onChange={() => setSuggestedStepGoal(getSuggestedStepGoal())}
                 />
                 <BlueInput
                   value={age}
                   onChangeText={setAge}
                   placeholder="age"
                   keyboardType="number-pad"
+                  onChange={() => setSuggestedStepGoal(getSuggestedStepGoal())}
                 />
 
                 {/* goal */}
@@ -376,6 +406,11 @@ export default function ProfileSettingsScreen() {
                     style={s.inputText}
                   />
                 </ImageBackground>
+
+                {/* recommended step goal */}
+                <Text style={s.ctaText}>
+                  recommended step goal: {suggestedStepGoal}
+                </Text>
 
                 {/* buttons */}
                 <View style={s.buttonRow}>
@@ -427,7 +462,7 @@ export default function ProfileSettingsScreen() {
                 style={s.modalPanel}
               >
                 <Text style={s.modalTitle}>choose avatar</Text>
-                
+
                 <View style={s.avatarGrid}>
                   {PRESET_AVATARS.map((avatar) => (
                     <PressableScale
