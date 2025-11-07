@@ -1,6 +1,6 @@
 export default function calculateDailySteps(weight: number, age: number, height: number): number {
     // Base step goal
-    const baseSteps: number = 10000;
+    const baseSteps: number = 8000;
     
     // Adjust for weight
     let stepAdjustment: number;
