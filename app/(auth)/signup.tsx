@@ -164,7 +164,7 @@ export default function SignUpScreen() {
       }
       
       Alert.alert('Success', 'Account created successfully');
-      router.replace('/(tabs)');
+      router.replace('/profile-settings');
     } catch (error: any) {
       console.error('Signup error:', error);
       

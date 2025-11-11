@@ -251,25 +251,36 @@ export async function updateStreak(userId: string): Promise<{
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
   
-  const recentSteps = await getRecentDailySteps(userId, 365);
-  
-  let currentStreak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
   
-  // Calculate current streak (consecutive days meeting goal)
-  for (let i = 0; i < 365; i++) {
-    const checkDate = new Date(today);
-    checkDate.setDate(checkDate.getDate() - i);
-    const dateStr = checkDate.toISOString().split('T')[0];
-    
-    const dayData = recentSteps.find(s => s.date.startsWith(dateStr));
-    
-    if (dayData && dayData.steps >= user.stepGoal) {
-      currentStreak++;
-    } else {
-      break;
-    }
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  
+  // Get yesterday's and today's steps
+  const [yesterdaySteps, todaySteps] = await Promise.all([
+    getDailySteps(userId, yesterdayStr),
+    getDailySteps(userId, todayStr)
+  ]);
+  
+  let currentStreak = user.currentStreak;
+  
+  // Check if yesterday's goal was met
+  const yesterdayGoalMet = yesterdaySteps && yesterdaySteps.steps >= user.stepGoal;
+  
+  // If yesterday's goal wasn't met, reset streak to 0
+  if (!yesterdayGoalMet) {
+    currentStreak = 0;
+  }
+  
+  // Check if today's goal was met
+  const todayGoalMet = todaySteps && todaySteps.steps >= user.stepGoal;
+  
+  // If today's goal was met, increment streak
+  if (todayGoalMet) {
+    currentStreak++;
   }
   
   // Update longest streak if needed
@@ -282,6 +293,7 @@ export async function updateStreak(userId: string): Promise<{
   
   return { currentStreak, longestStreak };
 }
+
 
 /**
  * Update user's total steps across all time

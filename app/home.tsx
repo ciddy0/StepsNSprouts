@@ -1,6 +1,5 @@
 // app/home.tsx
 import { AnimatedDuck } from "@/components/AnimatedDuck";
-import { getTreeStageName } from "@/services/steps/treegrowth";
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
@@ -159,6 +158,8 @@ export default function Home() {
   );
 }
 
+// Updated styles - replace your current styles object
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -170,34 +171,39 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   center: {
+    flex: 1,
     width: "100%",
-    maxWidth: 440,
     alignItems: "center",
+    justifyContent: "center",
   },
   content: {
+    flex: 1,
     width: "100%",
     maxWidth: 440,
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 60,
+    paddingHorizontal: 20,
   },
   title: {
     width: 360,
     height: 160,
-    marginBottom: 320,
+    marginTop: 40,
   },
   duckContainer: {
     position: "absolute",
-    top: "95%",
+    bottom: 150,
     left: "50%",
-    transform: [{ translateX: -32 }, { translateY: -100 }],
+    transform: [{ translateX: -32 }, { translateY: -32 }],
     zIndex: 10,
   },
   buttonsRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 120,
     gap: 16,
     width: "100%",
+    marginBottom: 20,
   },
   button: {
     width: 180,
