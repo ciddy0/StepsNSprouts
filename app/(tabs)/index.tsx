@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import itemMap from "@/constants/inventoryItems";
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
@@ -42,23 +43,22 @@ export default function HomeScreen() {
   // Auto-sync interval reference
   const syncIntervalRef = useRef<number | null>(null);
 
- const treeImageMap: { [key: number]: any } = {
-  0: require("../../assets/maiArt/tree0/tree_stage_0.png"),
-  1: require("../../assets/maiArt/tree0/tree_stage_1.png"),
-  2: require("../../assets/maiArt/tree0/tree_stage_2.png"),
-  3: require("../../assets/maiArt/tree0/tree_stage_3.png"),
-  4: require("../../assets/maiArt/tree0/tree_stage_4.png"),
-  5: require("../../assets/maiArt/tree0/tree_stage_5.png"),
-  6: require("../../assets/maiArt/tree0/tree_stage_6.png"),
-};
-  
-  const PRESET_AVATARS: { id: number; source: any }[] = [
-  { id: 1, source: require("../../assets/duck.png") },
-  { id: 2, source: require("../../assets/duck2.png") },
-  { id: 3, source: require("../../assets/flowerPic.png") },
-  { id: 4, source: require("../../assets/sprout_profile.png") },
-];
+  const treeImageMap: { [key: number]: any } = {
+    0: require("../../assets/maiArt/tree0/tree_stage_0.png"),
+    1: require("../../assets/maiArt/tree0/tree_stage_1.png"),
+    2: require("../../assets/maiArt/tree0/tree_stage_2.png"),
+    3: require("../../assets/maiArt/tree0/tree_stage_3.png"),
+    4: require("../../assets/maiArt/tree0/tree_stage_4.png"),
+    5: require("../../assets/maiArt/tree0/tree_stage_5.png"),
+    6: require("../../assets/maiArt/tree0/tree_stage_6.png"),
+  };
 
+  const PRESET_AVATARS: { id: number; source: any }[] = [
+    { id: 1, source: require("../../assets/duck.png") },
+    { id: 2, source: require("../../assets/duck2.png") },
+    { id: 3, source: require("../../assets/flowerPic.png") },
+    { id: 4, source: require("../../assets/sprout_profile.png") },
+  ];
 
   // DELETE THIS LATER JUST FOR DEMO HEHE HAHA
   const [growthLevel, setGrowthLevel] = useState(0);
@@ -115,7 +115,7 @@ export default function HomeScreen() {
           console.error("Initial sync failed:", err);
         }
       };
-      
+
       doInitialSync();
 
       // Setup auto-sync every 15 minutes
@@ -165,9 +165,9 @@ export default function HomeScreen() {
 
     fetchUserData();
   }, [user]);
-  
+
   const getAvatarSource = (avatarId: number) => {
-    const avatar = PRESET_AVATARS.find(a => a.id === avatarId);
+    const avatar = PRESET_AVATARS.find((a) => a.id === avatarId);
     return avatar ? avatar.source : require("../../assets/no_image.jpg");
   };
 
@@ -367,12 +367,17 @@ export default function HomeScreen() {
           />
           <Text>Profile Picture: {userData.profilePicture || "Not set"}</Text>
           <Text>Tree level: {userData.garden.tree.growthLevel}</Text>
-          <Text>Tree total steps: {userData.garden.tree.totalStepsContributed}</Text>
-          
+          <Text>
+            Tree total steps: {userData.garden.tree.totalStepsContributed}
+          </Text>
+
           {/* Display tree based on user's actual growth level */}
           <View style={{ marginTop: 20, alignItems: "center" }}>
-            <Image 
-              source={treeImageMap[userData.garden.tree.growthLevel] || treeImageMap[0]} 
+            <Image
+              source={
+                treeImageMap[userData.garden.tree.growthLevel] ||
+                treeImageMap[0]
+              }
               style={{ width: 200, height: 200, marginVertical: 10 }}
               resizeMode="contain"
             />
@@ -380,16 +385,36 @@ export default function HomeScreen() {
               Level {userData.garden.tree.growthLevel} / 6
             </Text>
             <Text style={{ fontSize: 12, color: "#999" }}>
-              {userData.garden.tree.totalStepsContributed.toLocaleString()} steps contributed
+              {userData.garden.tree.totalStepsContributed.toLocaleString()}{" "}
+              steps contributed
             </Text>
             <Text style={{ fontSize: 12, color: "#999" }}>
-              Next level: {((userData.garden.tree.growthLevel + 1) * 10000).toLocaleString()} steps
+              Next level:{" "}
+              {(
+                (userData.garden.tree.growthLevel + 1) *
+                10000
+              ).toLocaleString()}{" "}
+              steps
             </Text>
           </View>
 
           {/* Demo section - DELETE THIS LATER */}
-          <View style={{ marginTop: 30, padding: 15, backgroundColor: "#fff3cd", borderRadius: 8 }}>
-            <Text style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#856404" }}>
+          <View
+            style={{
+              marginTop: 30,
+              padding: 15,
+              backgroundColor: "#fff3cd",
+              borderRadius: 8,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "bold",
+                marginBottom: 8,
+                color: "#856404",
+              }}
+            >
               🎨 Demo Tree Preview (DELETE LATER)
             </Text>
             <TextInput
@@ -412,11 +437,34 @@ export default function HomeScreen() {
                 backgroundColor: "white",
               }}
             />
-            <Image 
-              source={treeImageMap[growthLevel]} 
-              style={{ width: 150, height: 150, marginVertical: 10, alignSelf: "center" }}
+            <Image
+              source={treeImageMap[growthLevel]}
+              style={{
+                width: 150,
+                height: 150,
+                marginVertical: 10,
+                alignSelf: "center",
+              }}
               resizeMode="contain"
             />
+          </View>
+          <Text>Inventory: </Text>
+          <View style={{ display: "flex", gap: 20, flexDirection: "row" }}>
+            {userData.inventory.map((item) => {
+              return (
+                <Image
+                  source={itemMap[item.decorationId]}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    marginVertical: 10,
+                    alignSelf: "left",
+                  }}
+                  resizeMode="contain"
+                  key={item.decorationId}
+                />
+              );
+            })}
           </View>
 
           <TouchableOpacity
