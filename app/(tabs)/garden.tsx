@@ -1,0 +1,484 @@
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, ImageBackground, ActivityIndicator, Image, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { auth } from '@/services/firebase/config';
+import { getUserDocument } from '@/services/api/userService';
+import { placeDecorationInGarden, removeDecorationFromGarden } from '@/services/api/userService';
+import itemMap from '@/constants/inventoryItems';
+
+type InventoryItem = {
+  decorationId: string;
+  instances: {
+    instanceId: string;
+    name: string | null;
+    dateAcquired: string;
+  }[];
+};
+
+type PlacedDecoration = {
+  instanceId: string;
+  x: number;
+  y: number;
+  dateAdded: string;
+};
+
+export default function GardenScreen() {
+  const [username, setUsername] = useState('');
+  const [treeLevel, setTreeLevel] = useState(0);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [placedDecorations, setPlacedDecorations] = useState<PlacedDecoration[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showInventory, setShowInventory] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+
+  // Preset locations for decorations (left and right of tree)
+  const decorationSlots = [
+    { x: 0, y: 0, position: 'left' },   // Left slot
+    { x: 1, y: 0, position: 'right' },  // Right slot
+  ];
+
+  const fetchUserData = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const userDoc = await getUserDocument(currentUser.uid);
+        if (userDoc) {
+          setUsername(userDoc.username || 'User');
+          setTreeLevel(userDoc.garden?.tree?.growthLevel || 0);
+          setInventory(userDoc.inventory || []);
+          setPlacedDecorations(userDoc.garden?.decorations || []);
+        } else {
+          setUsername('User');
+          setTreeLevel(0);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setUsername('User');
+      setTreeLevel(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  // Map growth level to one of 6 tree stages (0-5)
+  const getTreeStage = (level: number): number => {
+    if (level === 0) return 0;
+    if (level <= 1) return 1;
+    if (level <= 2) return 2;
+    if (level <= 3) return 3;
+    if (level <= 4) return 4;
+    return 5;
+  };
+
+  // Get the appropriate tree image based on stage
+  const getTreeImage = (stage: number) => {
+    const treeImages = [
+      require('@/assets/maiArt/tree0/tree_stage_0.png'),
+      require('@/assets/maiArt/tree0/tree_stage_1.png'),
+      require('@/assets/maiArt/tree0/tree_stage_2.png'),
+      require('@/assets/maiArt/tree0/tree_stage_3.png'),
+      require('@/assets/maiArt/tree0/tree_stage_4.png'),
+      require('@/assets/maiArt/tree0/tree_stage_5.png'),
+    ];
+    return treeImages[stage] || treeImages[0];
+  };
+
+  const currentTreeStage = getTreeStage(treeLevel);
+
+  // Check if a slot is occupied
+  const getDecorationInSlot = (slotX: number, slotY: number) => {
+    return placedDecorations.find(dec => dec.x === slotX && dec.y === slotY);
+  };
+
+  // Handle placing decoration
+  const handlePlaceDecoration = async (instanceId: string) => {
+    if (selectedSlot === null) return;
+
+    const slot = decorationSlots[selectedSlot];
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    try {
+      await placeDecorationInGarden(currentUser.uid, instanceId, slot.x, slot.y);
+      await fetchUserData(); // Refresh data
+      setShowInventory(false);
+      setSelectedSlot(null);
+    } catch (error) {
+      console.error('Error placing decoration:', error);
+      alert('Failed to place decoration');
+    }
+  };
+
+  // Handle removing decoration
+  const handleRemoveDecoration = async (instanceId: string) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    try {
+      await removeDecorationFromGarden(currentUser.uid, instanceId);
+      await fetchUserData(); // Refresh data
+    } catch (error) {
+      console.error('Error removing decoration:', error);
+      alert('Failed to remove decoration');
+    }
+  };
+
+  // Get available instances (not placed in garden)
+  const getAvailableInstances = () => {
+    const placedInstanceIds = placedDecorations.map(dec => dec.instanceId);
+    const available: { decorationId: string; instanceId: string; name: string | null }[] = [];
+    
+    inventory.forEach(item => {
+      item.instances.forEach(instance => {
+        if (!placedInstanceIds.includes(instance.instanceId)) {
+          available.push({
+            decorationId: item.decorationId,
+            instanceId: instance.instanceId,
+            name: instance.name,
+          });
+        }
+      });
+    });
+    
+    return available;
+  };
+
+  // Get decoration image from itemMap
+  const getDecorationImage = (decorationId: string) => {
+    return itemMap[decorationId] || require('@/assets/no_image.jpg');
+  };
+
+  // Get instance info including decorationId
+  const getInstanceInfo = (instanceId: string) => {
+    for (const item of inventory) {
+      const instance = item.instances.find(inst => inst.instanceId === instanceId);
+      if (instance) {
+        return {
+          decorationId: item.decorationId,
+          instance: instance,
+        };
+      }
+    }
+    return null;
+  };
+
+  return (
+    <View style={styles.container}>
+      <ImageBackground
+        source={require('@/assets/blue_background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        {/* Title with Username */}
+        <View style={styles.titleContainer}>
+          {loading ? (
+            <ActivityIndicator size="small" color="#733E39" />
+          ) : (
+            <Text style={styles.title}>{username}'s Garden</Text>
+          )}
+        </View>
+      </ImageBackground>
+
+      {/* Garden Area with Grass Patch Background - Lower Half */}
+      <ImageBackground
+        source={require('@/assets/grass_patch.png')}
+        style={styles.gardenArea}
+        resizeMode="cover"
+      >
+        <View style={styles.gardenContent}>
+          {/* Left Decoration Slot */}
+          <View style={styles.decorationSlot}>
+            {(() => {
+              const decoration = getDecorationInSlot(0, 0);
+              if (decoration) {
+                const instanceInfo = getInstanceInfo(decoration.instanceId);
+                return (
+                  <TouchableOpacity
+                    style={styles.placedDecoration}
+                    onPress={() => handleRemoveDecoration(decoration.instanceId)}
+                  >
+                    {instanceInfo && (
+                      <Image
+                        source={getDecorationImage(instanceInfo.decorationId)}
+                        style={styles.decorationImage}
+                        resizeMode="contain"
+                      />
+                    )}
+                    <Text style={styles.removeText}>Tap to remove</Text>
+                  </TouchableOpacity>
+                );
+              } else {
+                return (
+                  <TouchableOpacity
+                    style={styles.emptySlot}
+                    onPress={() => {
+                      setSelectedSlot(0);
+                      setShowInventory(true);
+                    }}
+                  >
+                    <Text style={styles.slotText}>+</Text>
+                  </TouchableOpacity>
+                );
+              }
+            })()}
+          </View>
+
+          {/* Tree in the center */}
+          <View style={styles.treeContainer}>
+            <Image
+              source={getTreeImage(currentTreeStage)}
+              style={styles.treeImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.treeLevelText}>Level {treeLevel}</Text>
+          </View>
+
+          {/* Right Decoration Slot */}
+          <View style={styles.decorationSlot}>
+            {(() => {
+              const decoration = getDecorationInSlot(1, 0);
+              if (decoration) {
+                const instanceInfo = getInstanceInfo(decoration.instanceId);
+                return (
+                  <TouchableOpacity
+                    style={styles.placedDecoration}
+                    onPress={() => handleRemoveDecoration(decoration.instanceId)}
+                  >
+                    {instanceInfo && (
+                      <Image
+                        source={getDecorationImage(instanceInfo.decorationId)}
+                        style={styles.decorationImage}
+                        resizeMode="contain"
+                      />
+                    )}
+                    <Text style={styles.removeText}>Tap to remove</Text>
+                  </TouchableOpacity>
+                );
+              } else {
+                return (
+                  <TouchableOpacity
+                    style={styles.emptySlot}
+                    onPress={() => {
+                      setSelectedSlot(1);
+                      setShowInventory(true);
+                    }}
+                  >
+                    <Text style={styles.slotText}>+</Text>
+                  </TouchableOpacity>
+                );
+              }
+            })()}
+          </View>
+        </View>
+      </ImageBackground>
+
+      {/* Inventory Modal */}
+      <Modal
+        visible={showInventory}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => {
+          setShowInventory(false);
+          setSelectedSlot(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Decoration</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowInventory(false);
+                  setSelectedSlot(null);
+                }}
+              >
+                <Text style={styles.closeButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.inventoryList}>
+              {getAvailableInstances().length === 0 ? (
+                <Text style={styles.emptyInventoryText}>
+                  No decorations available. Buy some from the shop!
+                </Text>
+              ) : (
+                getAvailableInstances().map((item) => (
+                  <TouchableOpacity
+                    key={item.instanceId}
+                    style={styles.inventoryItem}
+                    onPress={() => handlePlaceDecoration(item.instanceId)}
+                  >
+                    <Image
+                      source={getDecorationImage(item.decorationId)}
+                      style={styles.inventoryItemImage}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.inventoryItemText}>
+                      {item.name || `Decoration`}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  backgroundImage: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 40,
+  },
+  titleContainer: {
+    backgroundColor: '#EAD4AA',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+    minHeight: 68,
+    justifyContent: 'center',
+  },
+  title: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 48,
+    fontWeight: '600',
+    color: '#733E39',
+  },
+  gardenArea: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gardenContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  treeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  treeImage: {
+    width: 150,
+    height: 150,
+  },
+  treeLevelText: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#733E39',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  decorationSlot: {
+    width: 80,
+    height: 80,
+  },
+  emptySlot: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#733E39',
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slotText: {
+    fontSize: 40,
+    color: '#733E39',
+    fontWeight: '600',
+  },
+  placedDecoration: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  decorationImage: {
+    width: 70,
+    height: 70,
+  },
+  removeText: {
+    fontSize: 10,
+    color: '#733E39',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#EAD4AA',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#733E39',
+  },
+  closeButton: {
+    fontSize: 30,
+    color: '#733E39',
+    fontWeight: '600',
+  },
+  inventoryList: {
+    flex: 1,
+  },
+  inventoryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  inventoryItemImage: {
+    width: 50,
+    height: 50,
+    marginRight: 15,
+  },
+  inventoryItemText: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 18,
+    color: '#733E39',
+  },
+  emptyInventoryText: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 16,
+    color: '#733E39',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+});
