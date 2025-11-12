@@ -25,7 +25,7 @@ export async function getDailySteps(
   userId: string, 
   date: string
 ): Promise<DailySteps | null> {
-  const dailyStepsRef = doc(db, `users/${userId}/dailySteps`, date);
+  const dailyStepsRef = doc(db, 'users', userId, 'dailySteps', date);
   const docSnap = await getDoc(dailyStepsRef);
   
   if (docSnap.exists()) {
@@ -259,32 +259,48 @@ export async function updateStreak(userId: string): Promise<{
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
   
+  console.log('Looking for yesterday:', yesterdayStr); // Debug log
+  console.log('Looking for today:', todayStr); // Debug log
+  
   // Get yesterday's and today's steps
   const [yesterdaySteps, todaySteps] = await Promise.all([
     getDailySteps(userId, yesterdayStr),
     getDailySteps(userId, todayStr)
   ]);
   
-  let currentStreak = user.currentStreak;
+  console.log('Yesterday steps:', yesterdaySteps); // Debug log
+  console.log('Today steps:', todaySteps); // Debug log
   
-  // Check if yesterday's goal was met
-  const yesterdayGoalMet = yesterdaySteps && yesterdaySteps.steps >= user.stepGoal;
-  
-  // If yesterday's goal wasn't met, reset streak to 0
-  if (!yesterdayGoalMet) {
-    currentStreak = 0;
-  }
+  let currentStreak = user.currentStreak || 0; // Default to 0 if undefined
   
   // Check if today's goal was met
   const todayGoalMet = todaySteps && todaySteps.steps >= user.stepGoal;
   
-  // If today's goal was met, increment streak
   if (todayGoalMet) {
-    currentStreak++;
+    // If today's goal is met, check if we should increment or start fresh
+    const yesterdayGoalMet = yesterdaySteps && yesterdaySteps.steps >= user.stepGoal;
+    
+    if (yesterdayGoalMet || currentStreak === 0) {
+      // Continue streak or start new one
+      currentStreak++;
+    } else {
+      // Streak was broken, start fresh
+      currentStreak = 1;
+    }
+  } else {
+    // Today's goal not met yet
+    // Check if yesterday's goal was met to maintain current streak
+    const yesterdayGoalMet = yesterdaySteps && yesterdaySteps.steps >= user.stepGoal;
+    
+    if (!yesterdayGoalMet && currentStreak > 0) {
+      // Yesterday's goal wasn't met, reset streak
+      currentStreak = 0;
+    }
+    // If yesterday's goal was met, keep current streak as is (waiting for today)
   }
   
   // Update longest streak if needed
-  const longestStreak = Math.max(user.longestStreak, currentStreak);
+  const longestStreak = Math.max(user.longestStreak || 0, currentStreak);
   
   await updateUserProfile(userId, { 
     currentStreak, 
@@ -293,8 +309,6 @@ export async function updateStreak(userId: string): Promise<{
   
   return { currentStreak, longestStreak };
 }
-
-
 /**
  * Update user's total steps across all time
  */

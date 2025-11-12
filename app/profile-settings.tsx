@@ -1,11 +1,11 @@
 // app/profile-settings.tsx
-import calculateDailySteps from "@/services/steps/stepGoalCalculator";
 import { useAuth } from "@/context/AuthContext";
 import {
   ensureUserProfile,
   getUserProfile,
   updateUserProfile,
 } from "@/services/firebase/userProfile";
+import calculateDailySteps from "@/services/steps/stepGoalCalculator";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
