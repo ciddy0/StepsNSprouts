@@ -17,9 +17,7 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 export default function HomeScreen() {
@@ -397,57 +395,6 @@ export default function HomeScreen() {
               steps
             </Text>
           </View>
-
-          {/* Demo section - DELETE THIS LATER */}
-          <View
-            style={{
-              marginTop: 30,
-              padding: 15,
-              backgroundColor: "#fff3cd",
-              borderRadius: 8,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "bold",
-                marginBottom: 8,
-                color: "#856404",
-              }}
-            >
-              🎨 Demo Tree Preview (DELETE LATER)
-            </Text>
-            <TextInput
-              keyboardType="numeric"
-              value={String(growthLevel)}
-              onChangeText={(text) => {
-                const num = parseInt(text) || 0;
-                if (num >= 6) setGrowthLevel(6);
-                else if (num <= 0) setGrowthLevel(0);
-                else setGrowthLevel(num);
-              }}
-              placeholder="Tree Growth Level"
-              style={{
-                borderWidth: 1,
-                borderColor: "#ccc",
-                padding: 8,
-                borderRadius: 4,
-                marginTop: 8,
-                marginBottom: 8,
-                backgroundColor: "white",
-              }}
-            />
-            <Image
-              source={treeImageMap[growthLevel]}
-              style={{
-                width: 150,
-                height: 150,
-                marginVertical: 10,
-                alignSelf: "center",
-              }}
-              resizeMode="contain"
-            />
-          </View>
           <Text>Inventory: </Text>
           <View style={{ display: "flex", gap: 20, flexDirection: "row" }}>
             {userData.inventory.map((item) => {
@@ -466,21 +413,6 @@ export default function HomeScreen() {
               );
             })}
           </View>
-
-          <TouchableOpacity
-            onPress={() => router.push("/profile-settings")}
-            style={{
-              marginTop: 12,
-              padding: 10,
-              backgroundColor: "#2196F3",
-              borderRadius: 8,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "white", fontWeight: "bold" }}>
-              Edit Profile
-            </Text>
-          </TouchableOpacity>
         </View>
       )}
 
@@ -489,27 +421,6 @@ export default function HomeScreen() {
           <Text style={{ color: "red" }}>No Firestore user data found</Text>
         </View>
       )}
-
-      {/* Logout Button */}
-      <TouchableOpacity
-        onPress={handleLogout}
-        disabled={loading}
-        style={{
-          padding: 15,
-          backgroundColor: loading ? "#ccc" : "#f44336",
-          borderRadius: 8,
-          alignItems: "center",
-          marginBottom: 40,
-        }}
-      >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
-            Log Out
-          </Text>
-        )}
-      </TouchableOpacity>
     </ScrollView>
   );
 }
