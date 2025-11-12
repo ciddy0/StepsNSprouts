@@ -23,6 +23,7 @@ type PlacedDecoration = {
 export default function GardenScreen() {
   const [username, setUsername] = useState('');
   const [treeLevel, setTreeLevel] = useState(0);
+  const [totalStepsContributed, setTotalStepsContributed] = useState(0);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [placedDecorations, setPlacedDecorations] = useState<PlacedDecoration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,7 @@ export default function GardenScreen() {
         if (userDoc) {
           setUsername(userDoc.username || 'User');
           setTreeLevel(userDoc.garden?.tree?.growthLevel || 0);
+          setTotalStepsContributed(userDoc.garden?.tree?.totalStepsContributed || 0);
           setInventory(userDoc.inventory || []);
           setPlacedDecorations(userDoc.garden?.decorations || []);
           
@@ -52,12 +54,14 @@ export default function GardenScreen() {
         } else {
           setUsername('User');
           setTreeLevel(0);
+          setTotalStepsContributed(0);
         }
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
       setUsername('User');
       setTreeLevel(0);
+      setTotalStepsContributed(0);
     } finally {
       setLoading(false);
     }
@@ -90,7 +94,27 @@ export default function GardenScreen() {
     return treeImages[stage] || treeImages[0];
   };
 
+  // Calculate progress to next level
+  const getProgressToNextLevel = () => {
+    const currentLevelSteps = treeLevel * 10000;
+    const nextLevelSteps = (treeLevel + 1) * 10000;
+    const stepsInCurrentLevel = totalStepsContributed - currentLevelSteps;
+    const stepsNeededForLevel = nextLevelSteps - currentLevelSteps;
+    
+    if (treeLevel >= 5) {
+      return { progress: 1, stepsInLevel: 0, stepsNeeded: 0, isMaxLevel: true };
+    }
+    
+    return {
+      progress: Math.min(stepsInCurrentLevel / stepsNeededForLevel, 1),
+      stepsInLevel: stepsInCurrentLevel,
+      stepsNeeded: stepsNeededForLevel,
+      isMaxLevel: false,
+    };
+  };
+
   const currentTreeStage = getTreeStage(treeLevel);
+  const progressInfo = getProgressToNextLevel();
 
   // Check if a slot is occupied
   const getDecorationInSlot = (slotX: number, slotY: number) => {
@@ -194,13 +218,42 @@ export default function GardenScreen() {
 
         {/* Tree positioned at bottom of blue area, extending from grass */}
         <View style={styles.treePositioner}>
+          {/* Growth Progress Info - Above Tree */}
+          <View style={styles.growthInfoContainer}>
+            <Text style={styles.treeStageText}>
+              Stage {currentTreeStage} / 5
+            </Text>
+            
+            {!progressInfo.isMaxLevel ? (
+              <>
+                {/* Progress Bar */}
+                <View style={styles.progressBarContainer}>
+                  <View style={styles.progressBarBackground}>
+                    <View 
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${progressInfo.progress * 100}%` }
+                      ]} 
+                    />
+                  </View>
+                </View>
+                
+                <Text style={styles.progressText}>
+                  {progressInfo.stepsInLevel.toLocaleString()} / {progressInfo.stepsNeeded.toLocaleString()} steps
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.maxLevelText}>🌟 Max Level! 🌟</Text>
+            )}
+          </View>
+
+          {/* Tree Container with higher z-index */}
           <View style={styles.treeContainer}>
             <Image
               source={getTreeImage(currentTreeStage)}
               style={styles.treeImage}
               resizeMode="contain"
             />
-            <Text style={styles.treeLevelText}>Level {treeLevel}</Text>
           </View>
         </View>
       </ImageBackground>
@@ -385,7 +438,54 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     flex: 1, 
     paddingBottom: 0, 
-    margin:-100, 
+    margin: -100, 
+  },
+  growthInfoContainer: {
+    alignItems: 'center',
+    marginBottom: 15,
+    zIndex: 5,
+    backgroundColor: 'rgba(234, 212, 170, 0.95)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 200,
+  },
+  treeStageText: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#733E39',
+    marginBottom: 8,
+  },
+  progressBarContainer: {
+    width: '100%',
+    marginBottom: 6,
+  },
+  progressBarBackground: {
+    height: 12,
+    backgroundColor: '#D4B896',
+    borderRadius: 6,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#733E39',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#7CB342',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 14,
+    color: '#733E39',
+    fontWeight: '600',
+  },
+  maxLevelText: {
+    fontFamily: 'Pixelify Sans',
+    fontSize: 16,
+    color: '#733E39',
+    fontWeight: '700',
+    marginTop: 4,
   },
   gardenArea: {
     flex: 1,
@@ -405,12 +505,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
     marginTop: 20,
+    zIndex: 10,
   },
   decorationsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     width: '100%',
+    zIndex: 1,
   },
   treeImage: {
     width: 150,
@@ -428,9 +530,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     zIndex: 10,
   },
+  treeSpacePlaceholder: {
+    width: 80,
+  },
   decorationSlot: {
     width: 80,
     height: 80,
+    zIndex: 1,
   },
   emptySlot: {
     width: 80,
