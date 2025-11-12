@@ -136,8 +136,9 @@ const BROWN = "#623B2A";
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fff" },
-  bg: { flex: 1, width: "100%", height: "100%" },
-  center: { width: "100%", maxWidth: 440, alignItems: "center" },
+  bg: { flex: 1, width: "100%", height: "100%", alignItems: "center", 
+    justifyContent: "center",},
+  center: { flex: 1, width: "100%", maxWidth: 440, alignItems: "center", justifyContent: "center",},
   closeX: {
     fontFamily: "PixelifySans_700",
     fontSize: 26,
