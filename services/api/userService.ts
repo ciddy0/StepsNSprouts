@@ -55,7 +55,7 @@ export async function initializeNewUser(
     firstName: "",
     lastName: "",
     profilePicture: "",
-    pomes: 0,
+    pomes: 1000,
     stepGoal: 10000,
     totalSteps: 0,
     currentStreak: 0,
