@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ImageBackground, ActivityIndicator, Image, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { auth } from '@/services/firebase/config';
-import { getUserDocument } from '@/services/api/userService';
-import { placeDecorationInGarden, removeDecorationFromGarden } from '@/services/api/userService';
 import itemMap from '@/constants/inventoryItems';
+import { getUserDocument, placeDecorationInGarden, removeDecorationFromGarden } from '@/services/api/userService';
+import { auth } from '@/services/firebase/config';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type InventoryItem = {
   decorationId: string;
@@ -46,6 +45,10 @@ export default function GardenScreen() {
           setTreeLevel(userDoc.garden?.tree?.growthLevel || 0);
           setInventory(userDoc.inventory || []);
           setPlacedDecorations(userDoc.garden?.decorations || []);
+          
+          // Debug logging
+          console.log('User inventory:', userDoc.inventory);
+          console.log('Placed decorations:', userDoc.garden?.decorations);
         } else {
           setUsername('User');
           setTreeLevel(0);
@@ -144,12 +147,18 @@ export default function GardenScreen() {
       });
     });
     
+    console.log('Available instances:', available);
+    console.log('Total inventory items:', inventory.length);
+    console.log('Placed decorations count:', placedDecorations.length);
+    
     return available;
   };
 
   // Get decoration image from itemMap
   const getDecorationImage = (decorationId: string) => {
-    return itemMap[decorationId] || require('@/assets/no_image.jpg');
+    const image = itemMap[decorationId];
+    console.log(`Getting image for decorationId: ${decorationId}`, image ? 'Found' : 'NOT FOUND');
+    return image || require('@/assets/no_image.jpg');
   };
 
   // Get instance info including decorationId
@@ -168,6 +177,7 @@ export default function GardenScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Blue Sky Background - Upper Half */}
       <ImageBackground
         source={require('@/assets/blue_background.png')}
         style={styles.backgroundImage}
@@ -181,6 +191,18 @@ export default function GardenScreen() {
             <Text style={styles.title}>{username}'s Garden</Text>
           )}
         </View>
+
+        {/* Tree positioned at bottom of blue area, extending from grass */}
+        <View style={styles.treePositioner}>
+          <View style={styles.treeContainer}>
+            <Image
+              source={getTreeImage(currentTreeStage)}
+              style={styles.treeImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.treeLevelText}>Level {treeLevel}</Text>
+          </View>
+        </View>
       </ImageBackground>
 
       {/* Garden Area with Grass Patch Background - Lower Half */}
@@ -189,7 +211,8 @@ export default function GardenScreen() {
         style={styles.gardenArea}
         resizeMode="cover"
       >
-        <View style={styles.gardenContent}>
+        {/* Decorations Row */}
+        <View style={styles.decorationsRow}>
           {/* Left Decoration Slot */}
           <View style={styles.decorationSlot}>
             {(() => {
@@ -227,15 +250,8 @@ export default function GardenScreen() {
             })()}
           </View>
 
-          {/* Tree in the center */}
-          <View style={styles.treeContainer}>
-            <Image
-              source={getTreeImage(currentTreeStage)}
-              style={styles.treeImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.treeLevelText}>Level {treeLevel}</Text>
-          </View>
+          {/* Spacer for tree trunk */}
+          <View style={styles.treeSpacePlaceholder} />
 
           {/* Right Decoration Slot */}
           <View style={styles.decorationSlot}>
@@ -301,28 +317,38 @@ export default function GardenScreen() {
             </View>
 
             <ScrollView style={styles.inventoryList}>
-              {getAvailableInstances().length === 0 ? (
-                <Text style={styles.emptyInventoryText}>
-                  No decorations available. Buy some from the shop!
-                </Text>
-              ) : (
-                getAvailableInstances().map((item) => (
-                  <TouchableOpacity
-                    key={item.instanceId}
-                    style={styles.inventoryItem}
-                    onPress={() => handlePlaceDecoration(item.instanceId)}
-                  >
-                    <Image
-                      source={getDecorationImage(item.decorationId)}
-                      style={styles.inventoryItemImage}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.inventoryItemText}>
-                      {item.name || `Decoration`}
+              {(() => {
+                const availableItems = getAvailableInstances();
+                console.log('Rendering inventory items, count:', availableItems.length);
+                
+                if (availableItems.length === 0) {
+                  return (
+                    <Text style={styles.emptyInventoryText}>
+                      No decorations available. Buy some from the shop!
                     </Text>
-                  </TouchableOpacity>
-                ))
-              )}
+                  );
+                }
+                
+                return availableItems.map((item) => {
+                  console.log('Rendering item:', item.decorationId, item.instanceId);
+                  return (
+                    <TouchableOpacity
+                      key={item.instanceId}
+                      style={styles.inventoryItem}
+                      onPress={() => handlePlaceDecoration(item.instanceId)}
+                    >
+                      <Image
+                        source={getDecorationImage(item.decorationId)}
+                        style={styles.inventoryItemImage}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.inventoryItemText}>
+                        {item.name || item.decorationId}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                });
+              })()}
             </ScrollView>
           </View>
         </View>
@@ -361,14 +387,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   gardenContent: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'flex-start',
     width: '100%',
+    flex: 1,
   },
   treeContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 20,
+    marginTop: 20,
+  },
+  decorationsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    width: '100%',
   },
   treeImage: {
     width: 150,
@@ -412,8 +447,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   decorationImage: {
-    width: 70,
-    height: 70,
+    width: 80,
+    height: 80,
   },
   removeText: {
     fontSize: 10,
@@ -434,6 +469,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
+    minHeight: 300,
     maxHeight: '70%',
   },
   modalHeader: {
@@ -454,7 +490,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inventoryList: {
-    flex: 1,
+    flexGrow: 1,
   },
   inventoryItem: {
     flexDirection: 'row',
@@ -463,16 +499,19 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
+    borderWidth: 2,
+    borderColor: '#733E39',
   },
   inventoryItemImage: {
     width: 50,
     height: 50,
     marginRight: 15,
+    backgroundColor: '#f0f0f0',
   },
   inventoryItemText: {
-    fontFamily: 'Pixelify Sans',
     fontSize: 18,
     color: '#733E39',
+    fontWeight: '600',
   },
   emptyInventoryText: {
     fontFamily: 'Pixelify Sans',
