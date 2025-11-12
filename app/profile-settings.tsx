@@ -216,21 +216,13 @@ export default function ProfileSettingsScreen() {
 
       await updateUserProfile(user.uid, patch);
       Alert.alert("Success", "Your profile was updated.");
+      router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert("Error", err?.message ?? "Failed to update profile");
     } finally {
       setSaving(false);
     }
   };
-
-  `{(() => {
-  const suggested = getSuggestedStepGoal();
-  return suggested ? (
-    <Text style={{ marginTop: 8, color: '#666', fontSize: 14 }}>
-      Suggested step goal: {suggested.toLocaleString()}
-    </Text>
-  ) : null;
-})()}`;
 
   const handleSignOut = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -549,7 +541,7 @@ const s = StyleSheet.create({
     marginTop: 6,
     marginBottom: 10,
   },
-  avatar: { width: 96, height: 96 },
+  avatar: { width: 96, height: 96, borderRadius: 48 },
   camBtn: {
     position: "absolute",
     right: 8,
@@ -631,6 +623,7 @@ const s = StyleSheet.create({
     height: 120,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 36
   },
   avatarSelected: {
     opacity: 1,
@@ -639,6 +632,7 @@ const s = StyleSheet.create({
   avatarOptionImg: {
     width: 72,
     height: 72,
+    borderRadius: 36
   },
   modalCloseBtn: {
     width: 135,
