@@ -380,6 +380,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#733E39',
   },
+  treePositioner: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1, 
+    paddingBottom: 0, 
+    margin:-100, 
+  },
   gardenArea: {
     flex: 1,
     padding: 20,
@@ -419,6 +426,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     marginTop: 10,
+    zIndex: 10,
   },
   decorationSlot: {
     width: 80,
