@@ -73,45 +73,44 @@ export default function StepsTestScreen() {
     const circumference = 2 * Math.PI * radius;
     const dashOffset = circumference * (1 - progress);
     return (
-    <View style={s.ringWrap}>
-      {/* pixel frame (grey pill asset) */}
-      <ImageBackground
-        source={A.ringFrame}
-        resizeMode="stretch"
-        style={[s.ringFrame, { width: size + 20, height: size + 20 }]}
-      >
-        <Svg width={size} height={size}>
-          {/* base track */}
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#d7d7d9"
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-          {/* progress stroke */}
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="#ff2d55"
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${circumference} ${circumference}`}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="round"
-            fill="none"
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          />
-        </Svg>
-        <View style={s.ringCenter}>
-          <Text style={s.ringValue}>{Math.round(progress * 100)}%</Text>
-          <Text style={s.ringCaption}>of goal</Text>
-        </View>
-      </ImageBackground>
-    </View>
-  );
-}
+      <View style={s.ringWrap}>
+        <ImageBackground
+          source={A.ringFrame}
+          resizeMode="stretch"
+          style={[s.ringFrame, { width: size + 20, height: size + 20 }]}
+          imageStyle={pixelArtWebOnly}
+        >
+          <Svg width={size} height={size}>
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="#d7d7d9"
+              strokeWidth={strokeWidth}
+              fill="none"
+            />
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="#ff2d55"
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${circumference} ${circumference}`}
+              strokeDashoffset={dashOffset}
+              strokeLinecap="round"
+              fill="none"
+              transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            />
+          </Svg>
+          <View style={s.ringCenter}>
+            <Text style={s.ringValue}>{Math.round(progress * 100)}%</Text>
+            <Text style={s.ringCaption}>of goal</Text>
+          </View>
+        </ImageBackground>
+      </View>
+    );
+  }
+
   return (
     <View style={s.screen}>
       <ImageBackground
@@ -121,7 +120,6 @@ export default function StepsTestScreen() {
         imageStyle={pixelArtWebOnly}
       >
         <View style={s.center}>
-          {/* panel */}
           <ImageBackground
             source={A.panel}
             resizeMode="contain"
@@ -130,82 +128,69 @@ export default function StepsTestScreen() {
           >
             <Image source={A.close} style={s.closeBadge} resizeMode="contain" />
 
-            {/* title */}
-            <ImageBackground
-              source={A.longBrown}
-              resizeMode="stretch"
-              style={s.titlePill}
-              imageStyle={pixelArtWebOnly}
-            >
-              <Text style={s.titleText}>health</Text>
-            </ImageBackground>
-
-            {/* bigger steps display */}
-            <ImageBackground
-              source={A.longBrown}
-              resizeMode="stretch"
-              style={[s.row, { marginTop: 10 }]}
-              imageStyle={pixelArtWebOnly}
-            >
-              <Text style={s.rowLabel}>steps</Text>
-              <Text style={s.rowValue}>{steps.toLocaleString()}</Text>
-            </ImageBackground>
-
-            {/* progress bar (grey bg) */}
-            <View style={{ width: "100%", marginTop: 10 }}>
+            {/* Title */}
+            <View style={s.titleContainer}>
               <ImageBackground
-                source={A.grey}
+                source={A.longBrown}
                 resizeMode="stretch"
-                style={s.progressWrap}
+                style={s.titlePill}
                 imageStyle={pixelArtWebOnly}
               >
-                <View style={[s.progressFill, { width: `${Math.round(pct * 100)}%` }]} />
-                <Text style={s.progressText}>{Math.round(pct * 100)}% of goal</Text>
+                <Text style={s.titleText}>health</Text>
               </ImageBackground>
             </View>
 
-            {/* small stat rows */}
-            <ImageBackground
-              source={A.longBrown}
-              resizeMode="stretch"
-              style={s.row}
-              imageStyle={pixelArtWebOnly}
-            >
-              <Text style={s.rowLabel}>goal</Text>
-              <Text style={s.rowValue}>{progress?.goal?.toLocaleString?.() ?? "—"}</Text>
-            </ImageBackground>
+            {/* Content Container */}
+            <View style={s.contentContainer}>
+              {/* Steps Display */}
+              <ImageBackground
+                source={A.longBrown}
+                resizeMode="stretch"
+                style={s.row}
+                imageStyle={pixelArtWebOnly}
+              >
+                <View style={s.rowContent}>
+                  <Text style={s.rowLabel}>steps</Text>
+                  <Text style={s.rowValue}>{steps.toLocaleString()}</Text>
+                </View>
+              </ImageBackground>
 
-            <ImageBackground
-              source={A.longBrown}
-              resizeMode="stretch"
-              style={s.row}
-              imageStyle={pixelArtWebOnly}
-            >
-              <Text style={s.rowLabel}>remaining</Text>
-              <Text style={s.rowValue}>
-                {progress?.remaining?.toLocaleString?.() ?? "—"}
-              </Text>
-            </ImageBackground>
+              {/* Goal */}
+              <ImageBackground
+                source={A.longBrown}
+                resizeMode="stretch"
+                style={s.row}
+                imageStyle={pixelArtWebOnly}
+              >
+                <View style={s.rowContent}>
+                  <Text style={s.rowLabel}>goal</Text>
+                  <Text style={s.rowValue}>{progress?.goal?.toLocaleString?.() ?? "—"}</Text>
+                </View>
+              </ImageBackground>
 
+              {/* Remaining */}
+              <ImageBackground
+                source={A.longBrown}
+                resizeMode="stretch"
+                style={s.row}
+                imageStyle={pixelArtWebOnly}
+              >
+                <View style={s.rowContent}>
+                  <Text style={s.rowLabel}>remaining</Text>
+                  <Text style={s.rowValue}>
+                    {progress?.remaining?.toLocaleString?.() ?? "—"}
+                  </Text>
+                </View>
+              </ImageBackground>
 
+              {/* Progress Ring */}
+              <ProgressRing progress={pct} />
 
-
-            {/* circle progress */}
-            <ProgressRing progress={pct} />
-
-            <ImageBackground
-              source={A.longBrown}
-              resizeMode="stretch"
-              style={s.row}
-              imageStyle={pixelArtWebOnly}
-            >
-              <Text style={s.rowLabel}>initialized</Text>
-              <Text style={s.rowValue}>{isInitialized ? "yes" : "no"}</Text>
-            </ImageBackground>
-
-            {error ? (
-              <Text style={[s.errorText, { marginTop: 8 }]}>{error}</Text>
-            ) : null}
+              {/* Error Message */}
+              {error ? (
+                <Text style={s.errorText}>{error}</Text>
+              ) : null}
+            </View>
           </ImageBackground>
         </View>
       </ImageBackground>
@@ -214,41 +199,70 @@ export default function StepsTestScreen() {
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#fff" },
-  bg: { flex: 1, width: "100%", height: "100%" },
-
-  center: { width: "100%", maxWidth: 440, alignItems: "center" },
-
+  screen: { 
+    flex: 1, 
+    backgroundColor: "#fff" 
+  },
+  bg: { 
+    flex: 1, 
+    width: "100%", 
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  center: { 
+    width: "100%", 
+    maxWidth: 440, 
+    alignItems: "center",
+    justifyContent: "center",
+  },
   panel: {
     width: 360,
     height: 640,
     alignItems: "center",
-    paddingTop: 26,
-    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingHorizontal: 16,
   },
-  closeBadge: { position: "absolute", top: -10, right: -8, width: 64, height: 64 },
-
+  closeBadge: { 
+    position: "absolute", 
+    top: -10, 
+    right: -8, 
+    width: 64, 
+    height: 64 
+  },
+  titleContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   titlePill: {
     width: 220,
     height: 54,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 6,
   },
   titleText: {
     fontFamily: "PixelifySans_700",
     fontSize: 24,
     color: "#623B2A",
+    textAlign: "center",
   },
-
+  contentContainer: {
+    width: "100%",
+    alignItems: "center",
+    gap: 10,
+  },
   row: {
     width: "100%",
     height: 54,
+  },
+  rowContent: {
+    flex: 1,
     paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    flexDirection: "row",
-    marginTop: 8,
   },
   rowLabel: {
     fontFamily: "PixelifySans_700",
@@ -260,62 +274,37 @@ const s = StyleSheet.create({
     fontSize: 20,
     color: "#3B2A27",
   },
-
-  progressWrap: {
-    width: "100%",
-    height: 54,
-    borderRadius: 12,
-    overflow: "hidden",
-    justifyContent: "center",
-  },
-  progressFill: {
-    position: "absolute",
-    left: 8,
-    right: 8,
-    height: 22,
-    backgroundColor: "#ff2d55", 
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  progressText: {
-    textAlign: "center",
-    fontFamily: "PixelifySans_700",
-    fontSize: 16,
-    color: "#623B2A",
-  },
-
   errorText: {
     fontFamily: "PixelifySans_700",
     fontSize: 14,
     color: "#ff3b30",
     textAlign: "center",
     paddingHorizontal: 8,
+    marginTop: 8,
   },
   ringWrap: {
-  alignItems: "center",
-  justifyContent: "center",
-  marginTop: 10,
-},
-ringFrame: {
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 100,
-},
-ringCenter: {
-  position: "absolute",
-  alignItems: "center",
-  justifyContent: "center",
-},
-ringValue: {
-  fontFamily: "PixelifySans_700",
-  fontSize: 22,
-  color: "#623B2A",
-},
-ringCaption: {
-  fontFamily: "PixelifySans_700",
-  fontSize: 14,
-  color: "#3B2A27",
-  marginTop: -2,
-},
-
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+  ringFrame: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringCenter: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringValue: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 22,
+    color: "#623B2A",
+  },
+  ringCaption: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 14,
+    color: "#3B2A27",
+    marginTop: -2,
+  },
 });

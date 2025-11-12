@@ -1,3 +1,4 @@
+import itemMap from "@/constants/inventoryItems";
 import { useAuth } from "@/context/AuthContext";
 import {
   getTodaysStepsWithProgress,
@@ -20,7 +21,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import itemMap from "@/constants/inventoryItems";
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
