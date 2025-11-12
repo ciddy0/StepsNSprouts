@@ -1,6 +1,8 @@
-import { Link } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
+import { Link, useRouter } from "expo-router";
 import { useRef } from "react";
 import {
+  Alert,
   Animated,
   Image,
   ImageBackground,
@@ -19,6 +21,7 @@ const A = {
   panel: require("../../assets/maiArt/panel_brown.png"),
   plaque: require("../../assets/maiArt/button_long_brown.png"),
   pillYellow: require("../../assets/maiArt/button_yellow.png"),
+  pillRed: require("../../assets/maiArt/button_red.png"),
   close: require("../../assets/maiArt/button_square.png"),
 
   icoProfile: require("../../assets/maiArt/profile.png"),
@@ -45,13 +48,15 @@ function PressableScale({ onPress, children, style }: any) {
   );
 }
 
-function Row({ icon, text }: { icon: any; text: string }) {
+function Row({ icon, text, isRed }: { icon: any; text: string; isRed?: boolean }) {
   return (
     <View style={styles.rowWrap}>
-      {/* pill stack */}
       <View style={styles.pillWrap}>
-        {/* front pill (yellow) with text inside */}
-         <ImageBackground source={A.pillYellow} style={styles.pill} resizeMode="stretch">
+        <ImageBackground 
+          source={isRed ? A.pillRed : A.pillYellow} 
+          style={styles.pill} 
+          resizeMode="stretch"
+        >
           <Image source={icon} style={styles.pillIcon} />
           <Text numberOfLines={1} style={styles.pillText}>{text}</Text>
         </ImageBackground>
@@ -60,13 +65,37 @@ function Row({ icon, text }: { icon: any; text: string }) {
   );
 }
 
-
 export default function Settings() {
   const { width } = useWindowDimensions();
+  const { signOut } = useAuth();
+  const router = useRouter();
+  
   const pixel =
     Platform.OS === "web" && width >= 768
       ? ({ imageRendering: "pixelated" } as any)
       : undefined;
+
+  const handleSignOut = async () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut();
+            router.replace("/login");
+          } catch (err: any) {
+            Alert.alert("Error", err?.message ?? "Failed to sign out");
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleClose = () => {
+    router.back();
+  };
 
   return (
     <View style={styles.screen}>
@@ -74,12 +103,11 @@ export default function Settings() {
         <View style={styles.center}>
           <ImageBackground source={A.panel} style={styles.panel} resizeMode="contain" imageStyle={pixel}>
             {/* close button with x */}
-            <PressableScale style={{ position: "absolute", top: -8, right: -6 }} onPress={() => {}}>
+            <PressableScale style={{ position: "absolute", top: -8, right: -6 }} onPress={handleClose}>
               <ImageBackground source={A.close} style={{ width: 58, height: 58, alignItems: "center", justifyContent: "center" }}>
                 <Text style={styles.closeX}>x</Text>
               </ImageBackground>
             </PressableScale>
-
 
             {/* title */}
             <ImageBackground source={A.plaque} style={styles.titlePlate} resizeMode="stretch" imageStyle={pixel}>
@@ -90,20 +118,14 @@ export default function Settings() {
             <Link href="/profile-settings" asChild>
               <PressableScale><Row icon={A.icoProfile} text="edit profile" /></PressableScale>
             </Link>
-            <PressableScale><Row icon={A.icoSecurity} text="security" /></PressableScale>
-            <PressableScale><Row icon={A.icoNotif} text="notifications" /></PressableScale>
             <PressableScale><Row icon={A.icoPrivacy} text="privacy" /></PressableScale>
-            <PressableScale><Row icon={A.icoHelp} text="help & support" /></PressableScale>
             <PressableScale><Row icon={A.icoTerms} text="terms & conditions" /></PressableScale>
-            <PressableScale><Row icon={A.icoReport} text="report" /></PressableScale>
+            
+            {/* sign out button inside panel */}
+            <PressableScale onPress={handleSignOut}>
+              <Row icon={A.icoProfile} text="sign out" isRed />
+            </PressableScale>
           </ImageBackground>
-
-          {/* sign out */}
-          <PressableScale onPress={() => {}}>
-            <ImageBackground source={A.pillYellow} style={styles.signOut} resizeMode="stretch" imageStyle={pixel}>
-              <Text style={styles.signOutText}>sign out</Text>
-            </ImageBackground>
-          </PressableScale>
         </View>
       </ImageBackground>
     </View>
@@ -131,7 +153,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
 
-
   titlePlate: {
     width: 260,
     height: 68,
@@ -141,10 +162,6 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: "PixelifySans_700", fontSize: 28, color: BROWN },
 
-  
-  closeWrap: { position: "absolute", top: -8, right: -6 },
-  close: { width: 58, height: 58, alignItems: "center", justifyContent: "center" },
-
   rowWrap: {
     width: "100%",
     height: 72,
@@ -152,54 +169,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  iconCol: { width: 44, alignItems: "center", justifyContent: "center" },
-  icon: { width: 22, height: 22},
 
-  
-  pillBack: {
-    position: "absolute",
-    left: 0,
-    top: 4,
-    width: 268,  
-    height: 64,
-  },
-  pillStack: {
-    flex: 1,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
   pillWrap: {
     marginLeft: 4,
     height: 72,
     justifyContent: "center",
   },
- 
-  pillHalo: {
-    position: "absolute",
-    left: 6,
-    width: "78%",        
-    height: 66,
-  },
   
   pill: {
     width: 240,   
     height: 56,
-    marginLeft: 14,
     paddingHorizontal: 18,
     justifyContent: "center",
     flexDirection: "row",
     alignItems: "center",
   },
   pillIcon: {
-  width: 22,
-  height: 22,
-  tintColor: BROWN,
-  marginRight: 12,   
+    width: 22,
+    height: 22,
+    tintColor: BROWN,
+    marginRight: 12,   
   },
-  rowText: { fontFamily: "PixelifySans_700", fontSize: 20, color: BROWN },
   pillText: { fontFamily: "PixelifySans_700", fontSize: 20, color: BROWN },
-
-  signOut: { width: 230, height: 72, marginTop: 14, alignItems: "center", justifyContent: "center" },
-  signOutText: { fontFamily: "PixelifySans_700", fontSize: 22, color: BROWN },
 });
