@@ -1,6 +1,7 @@
+import PrivacyModal from "@/components/PrivacyModal"; // new
 import { useAuth } from "@/context/AuthContext";
 import { Link, useRouter } from "expo-router";
-import { useRef } from "react";
+import { useRef, useState } from "react"; // new
 import {
   Alert,
   Animated,
@@ -70,6 +71,9 @@ export default function Settings() {
   const { signOut } = useAuth();
   const router = useRouter();
   
+// new -------------------------------------------------
+  const [showPrivacy, setShowPrivacyModal] = useState(false);
+
   const pixel =
     Platform.OS === "web" && width >= 768
       ? ({ imageRendering: "pixelated" } as any)
@@ -97,6 +101,16 @@ export default function Settings() {
     router.back();
   };
 
+// new -------------------------------------------------
+const handleOpenPrivacy = () => {
+  setShowPrivacyModal(true);
+}
+// new -------------------------------------------------
+const handleClosePrivacy = () => {
+  setShowPrivacyModal(false);
+}
+
+
   return (
     <View style={styles.screen}>
       <ImageBackground source={A.bg} style={styles.bg} resizeMode="cover" imageStyle={pixel}>
@@ -118,8 +132,15 @@ export default function Settings() {
             <Link href="/profile-settings" asChild>
               <PressableScale><Row icon={A.icoProfile} text="edit profile" /></PressableScale>
             </Link>
-            <PressableScale><Row icon={A.icoPrivacy} text="privacy" /></PressableScale>
-            <PressableScale><Row icon={A.icoTerms} text="terms & conditions" /></PressableScale>
+            {/* New ------------------------------------------------- */}
+            
+            <PressableScale onPress={handleOpenPrivacy}>
+              <Row icon={A.icoPrivacy} text="privacy" />
+            </PressableScale>
+
+            <PressableScale>
+              <Row icon={A.icoHelp} text="terms & conditions" />
+            </PressableScale>
             
             {/* sign out button inside panel */}
             <PressableScale onPress={handleSignOut}>
@@ -128,6 +149,8 @@ export default function Settings() {
           </ImageBackground>
         </View>
       </ImageBackground>
+      {/* New ------------------------------------------------- */}
+      <PrivacyModal visible={showPrivacy} onClose={handleClosePrivacy} />
     </View>
   );
 }
