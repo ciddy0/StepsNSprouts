@@ -359,7 +359,7 @@ export default function HomeScreen() {
           <Text>Current Streak: {userData.currentStreak} days 🔥</Text>
           <Text>Longest Streak: {userData.longestStreak} days</Text>
           <Image
-            source={getAvatarSource(userData.profilePicture)}
+            source={getAvatarSource(parseInt(userData.profilePicture) || 1)}
             style={{ width: 100, height: 100, borderRadius: 50 }}
             resizeMode="contain"
           />
@@ -400,12 +400,12 @@ export default function HomeScreen() {
             {userData.inventory.map((item) => {
               return (
                 <Image
-                  source={itemMap[item.decorationId]}
+                  source={itemMap[item.decorationId as keyof typeof itemMap]}
                   style={{
                     width: 50,
                     height: 50,
                     marginVertical: 10,
-                    alignSelf: "left",
+                    alignSelf: "flex-start",
                   }}
                   resizeMode="contain"
                   key={item.decorationId}
