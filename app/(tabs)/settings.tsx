@@ -1,4 +1,5 @@
-import PrivacyModal from "@/components/PrivacyModal"; // new
+import PrivacyModal from "@/components/PrivacyModal";
+import TermsModal from "@/components/TermsModal";
 import { useAuth } from "@/context/AuthContext";
 import { Link, useRouter } from "expo-router";
 import { useRef, useState } from "react"; // new
@@ -53,9 +54,9 @@ function Row({ icon, text, isRed }: { icon: any; text: string; isRed?: boolean }
   return (
     <View style={styles.rowWrap}>
       <View style={styles.pillWrap}>
-        <ImageBackground 
-          source={isRed ? A.pillRed : A.pillYellow} 
-          style={styles.pill} 
+        <ImageBackground
+          source={isRed ? A.pillRed : A.pillYellow}
+          style={styles.pill}
           resizeMode="stretch"
         >
           <Image source={icon} style={styles.pillIcon} />
@@ -70,9 +71,10 @@ export default function Settings() {
   const { width } = useWindowDimensions();
   const { signOut } = useAuth();
   const router = useRouter();
-  
-// new -------------------------------------------------
+
+  // new -------------------------------------------------
   const [showPrivacy, setShowPrivacyModal] = useState(false);
+  const [showTerms, setShowTermsModal] = useState(false);
 
   const pixel =
     Platform.OS === "web" && width >= 768
@@ -101,14 +103,22 @@ export default function Settings() {
     router.back();
   };
 
-// new -------------------------------------------------
-const handleOpenPrivacy = () => {
-  setShowPrivacyModal(true);
-}
-// new -------------------------------------------------
-const handleClosePrivacy = () => {
-  setShowPrivacyModal(false);
-}
+  // new -------------------------------------------------
+  const handleOpenPrivacy = () => {
+    setShowPrivacyModal(true);
+  }
+  // new -------------------------------------------------
+  const handleClosePrivacy = () => {
+    setShowPrivacyModal(false);
+  }
+  // new -------------------------------------------------
+  const handleOpenTerms = () => {
+    setShowTermsModal(true);
+  }
+  // new -------------------------------------------------
+  const handleCloseTerms = () => {
+    setShowTermsModal(false);
+  }
 
 
   return (
@@ -133,15 +143,15 @@ const handleClosePrivacy = () => {
               <PressableScale><Row icon={A.icoProfile} text="edit profile" /></PressableScale>
             </Link>
             {/* New ------------------------------------------------- */}
-            
+
             <PressableScale onPress={handleOpenPrivacy}>
               <Row icon={A.icoPrivacy} text="privacy" />
             </PressableScale>
 
-            <PressableScale>
-              <Row icon={A.icoHelp} text="terms & conditions" />
+            <PressableScale onPress={handleOpenTerms}>
+              <Row icon={A.icoTerms} text="terms & conditions" />
             </PressableScale>
-            
+
             {/* sign out button inside panel */}
             <PressableScale onPress={handleSignOut}>
               <Row icon={A.icoProfile} text="sign out" isRed />
@@ -151,6 +161,7 @@ const handleClosePrivacy = () => {
       </ImageBackground>
       {/* New ------------------------------------------------- */}
       <PrivacyModal visible={showPrivacy} onClose={handleClosePrivacy} />
+      <TermsModal visible={showTerms} onClose={handleCloseTerms} />
     </View>
   );
 }
@@ -159,9 +170,11 @@ const BROWN = "#623B2A";
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fff" },
-  bg: { flex: 1, width: "100%", height: "100%", alignItems: "center", 
-    justifyContent: "center",},
-  center: { flex: 1, width: "100%", maxWidth: 440, alignItems: "center", justifyContent: "center",},
+  bg: {
+    flex: 1, width: "100%", height: "100%", alignItems: "center",
+    justifyContent: "center",
+  },
+  center: { flex: 1, width: "100%", maxWidth: 440, alignItems: "center", justifyContent: "center", },
   closeX: {
     fontFamily: "PixelifySans_700",
     fontSize: 26,
@@ -199,9 +212,9 @@ const styles = StyleSheet.create({
     height: 72,
     justifyContent: "center",
   },
-  
+
   pill: {
-    width: 240,   
+    width: 240,
     height: 56,
     paddingHorizontal: 18,
     justifyContent: "center",
@@ -212,7 +225,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     tintColor: BROWN,
-    marginRight: 12,   
+    marginRight: 12,
   },
   pillText: { fontFamily: "PixelifySans_700", fontSize: 20, color: BROWN },
 });
