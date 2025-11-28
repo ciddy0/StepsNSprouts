@@ -1,11 +1,9 @@
 import itemMap from "@/constants/inventoryItems";
 import { useAuth } from "@/context/AuthContext";
+import { useUserData } from "@/context/UserDataContext";
 import {
-  getTodaysStepsWithProgress,
   syncTodaysStepsFromHealthKit,
 } from "@/services/api/dailyStepsService";
-import { getUserDocument } from "@/services/api/userService";
-import { User } from "@/services/firebase/collections/user";
 import { ensureHealthServiceInitialized } from "@/services/steps";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -22,21 +20,9 @@ import {
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
+  const { userData, stepsData, fetchData } = useUserData();
   const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState<User | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Steps state
-  const [stepsData, setStepsData] = useState({
-    steps: 0,
-    goal: 10000,
-    progress: 0,
-    goalMet: false,
-    remaining: 0,
-    lastSynced: null as string | null,
-  });
-  const [stepsLoading, setStepsLoading] = useState(true);
 
   // Auto-sync interval reference
   const syncIntervalRef = useRef<number | null>(null);
@@ -58,9 +44,6 @@ export default function HomeScreen() {
     { id: 4, source: require("../../assets/sprout_profile.png") },
   ];
 
-  // DELETE THIS LATER JUST FOR DEMO HEHE HAHA
-  const [growthLevel, setGrowthLevel] = useState(0);
-
   // Initialize HealthKit on mount
   useEffect(() => {
     const initHealthKit = async () => {
@@ -80,35 +63,16 @@ export default function HomeScreen() {
     initHealthKit();
   }, []);
 
-  // Fetch steps data
-  const fetchStepsData = async () => {
-    if (!user) return;
-
-    try {
-      setStepsLoading(true);
-      const data = await getTodaysStepsWithProgress(user.uid);
-      setStepsData(data);
-    } catch (error) {
-      console.error("Error fetching steps data:", error);
-      Alert.alert("Error", "Failed to load step data");
-    } finally {
-      setStepsLoading(false);
-    }
-  };
-
   // Setup auto-sync when user is available
   useEffect(() => {
     if (user) {
-      // Initial sync on mount
+      // Initial sync and fetch cached data
       const doInitialSync = async () => {
         try {
           console.log("[HomeScreen] Performing initial sync...");
           await syncTodaysStepsFromHealthKit(user.uid);
-          // Fetch data after initial sync
-          await fetchStepsData();
-          // Fetch user data to get tree level
-          const updatedUserData = await getUserDocument(user.uid);
-          setUserData(updatedUserData);
+          // Refresh cached data
+          await fetchData(user.uid, true);
         } catch (err) {
           console.error("Initial sync failed:", err);
         }
@@ -121,13 +85,9 @@ export default function HomeScreen() {
         async () => {
           try {
             console.log("[HomeScreen] Auto-syncing steps...");
-            // Sync to Firebase
             await syncTodaysStepsFromHealthKit(user.uid);
-            // Fetch updated data to refresh UI
-            await fetchStepsData();
-            // Also refresh user data to get updated tree level
-            const updatedUserData = await getUserDocument(user.uid);
-            setUserData(updatedUserData);
+            // Refresh cached data
+            await fetchData(user.uid, true);
           } catch (err) {
             console.error("Auto-sync failed:", err);
           }
@@ -144,53 +104,21 @@ export default function HomeScreen() {
         clearInterval(syncIntervalRef.current);
       }
     };
-  }, [user]);
+  }, [user, fetchData]);
 
-  // Fetch user data
-  useEffect(() => {
-    const fetchUserData = async () => {
+  // Fetch cached data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
       if (user) {
-        try {
-          const data = await getUserDocument(user.uid);
-          setUserData(data);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        } finally {
-          setDataLoading(false);
-        }
+        fetchData(user.uid); // Will use cache if fresh
       }
-    };
-
-    fetchUserData();
-  }, [user]);
+    }, [user, fetchData])
+  );
 
   const getAvatarSource = (avatarId: number) => {
     const avatar = PRESET_AVATARS.find((a) => a.id === avatarId);
     return avatar ? avatar.source : require("../../assets/no_image.jpg");
   };
-
-  // Refetch data when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      const refetchOnFocus = async () => {
-        if (user) {
-          try {
-            // Only fetch cached data, don't sync
-            // Syncing is handled by the auto-sync interval
-            const data = await getUserDocument(user.uid);
-            setUserData(data);
-
-            // Refresh steps from cache
-            await fetchStepsData();
-          } catch (error) {
-            console.error("Error fetching data on focus:", error);
-          }
-        }
-      };
-
-      refetchOnFocus();
-    }, [user])
-  );
 
   // Pull to refresh
   const onRefresh = async () => {
@@ -200,15 +128,8 @@ export default function HomeScreen() {
     try {
       // Force sync steps from HealthKit
       await syncTodaysStepsFromHealthKit(user.uid);
-
-      // Refresh all data
-      const [userDataResult, stepsDataResult] = await Promise.all([
-        getUserDocument(user.uid),
-        getTodaysStepsWithProgress(user.uid),
-      ]);
-
-      setUserData(userDataResult);
-      setStepsData(stepsDataResult);
+      // Force refresh cached data
+      await fetchData(user.uid, true);
     } catch (error) {
       console.error("Error refreshing data:", error);
       Alert.alert("Error", "Failed to refresh data");
@@ -234,14 +155,7 @@ export default function HomeScreen() {
     }
   };
 
-  if (dataLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 10 }}>Loading user data...</Text>
-      </View>
-    );
-  }
+
 
   return (
     <ScrollView
@@ -267,9 +181,7 @@ export default function HomeScreen() {
           Today's Steps
         </Text>
 
-        {stepsLoading ? (
-          <ActivityIndicator />
-        ) : (
+        {userData ? (
           <>
             <View style={{ marginBottom: 10 }}>
               <Text
@@ -328,6 +240,8 @@ export default function HomeScreen() {
               </Text>
             )}
           </>
+        ) : (
+          <ActivityIndicator />
         )}
       </View>
 
