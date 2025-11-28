@@ -16,8 +16,8 @@ import { useEffect } from "react";
 
 import { AuthProvider } from "@/context/AuthContext";
 import { GameUserProvider } from "@/context/GameUserContext";
+import { UserDataProvider } from "@/context/UserDataContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
-
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -41,18 +41,20 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <GameUserProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </GameUserProvider>
+      <UserDataProvider>
+        <GameUserProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </GameUserProvider>
+      </UserDataProvider>
     </AuthProvider>
   );
 }

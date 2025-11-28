@@ -1,19 +1,20 @@
-// app/(tabs)/test.tsx
-import { useEffect, useState } from "react";
+// app/(tabs)/test.tsx - Stats Tab
+import { useAuth } from "@/context/AuthContext";
+import { useUserData } from "@/context/UserDataContext";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   Platform,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from "react-native";
-import {
-  ensureHealthServiceInitialized,
-  getTodaysProgress,
-  getTodaysSteps,
-} from "../../services/steps";
 
 import Svg, { Circle } from "react-native-svg";
 
@@ -29,45 +30,35 @@ const A = {
   ringFrame: require("../../assets/maiArt/button_grey.png"),
 };
 
-export default function StepsTestScreen() {
+export default function StatsScreen() {
+  const { user } = useAuth();
+  const { userData, stepsData, isLoading, fetchData } = useUserData();
   const { width } = useWindowDimensions();
   const pixelArtWebOnly =
     Platform.OS === "web" && width >= 768 ? ({ imageRendering: "pixelated" } as any) : undefined;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [steps, setSteps] = useState<number>(0);
-  const [progress, setProgress] = useState<any>(null);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const loadStepData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const initialized = await ensureHealthServiceInitialized();
-        setIsInitialized(initialized);
-
-        if (initialized) {
-          const todaySteps = await getTodaysSteps();
-          setSteps(todaySteps);
-          const progressData = await getTodaysProgress(10000);
-          setProgress(progressData);
-        } else {
-          setError("Failed to initialize health service");
-        }
-      } catch (err: any) {
-        setError(`Error: ${err?.message ?? String(err)}`);
-        console.error("Steps test error:", err);
-      } finally {
-        setIsLoading(false);
+  // Fetch data when screen loads (will use cache if fresh)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchData(user.uid);
       }
-    };
-    loadStepData();
-  }, []);
+    }, [user, fetchData])
+  );
 
-  const pct = progress ? Math.max(0, Math.min(1, progress.progress)) : 0;
-  
+  // Pull to refresh - force refresh
+  const onRefresh = async () => {
+    if (!user) return;
+
+    setRefreshing(true);
+    await fetchData(user.uid, true); // Force refresh
+    setRefreshing(false);
+  };
+
+  const pct = Math.max(0, Math.min(1, stepsData.progress));
+
   function ProgressRing({ size = 140, strokeWidth = 12, progress = 0 }) {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
@@ -111,8 +102,22 @@ export default function StepsTestScreen() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <View style={[s.screen, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color="#623B2A" />
+        <Text style={{ marginTop: 10, fontFamily: "PixelifySans_700" }}>Loading stats...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={s.screen}>
+    <ScrollView
+      style={s.screen}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <ImageBackground
         source={A.bg}
         resizeMode="cover"
@@ -136,13 +141,13 @@ export default function StepsTestScreen() {
                 style={s.titlePill}
                 imageStyle={pixelArtWebOnly}
               >
-                <Text style={s.titleText}>health</Text>
+                <Text style={s.titleText}>stats</Text>
               </ImageBackground>
             </View>
 
             {/* Content Container */}
             <View style={s.contentContainer}>
-              {/* Steps Display */}
+              {/* Today's Steps */}
               <ImageBackground
                 source={A.longBrown}
                 resizeMode="stretch"
@@ -150,8 +155,8 @@ export default function StepsTestScreen() {
                 imageStyle={pixelArtWebOnly}
               >
                 <View style={s.rowContent}>
-                  <Text style={s.rowLabel}>steps</Text>
-                  <Text style={s.rowValue}>{steps.toLocaleString()}</Text>
+                  <Text style={s.rowLabel}>today</Text>
+                  <Text style={s.rowValue}>{stepsData.steps.toLocaleString()}</Text>
                 </View>
               </ImageBackground>
 
@@ -164,7 +169,7 @@ export default function StepsTestScreen() {
               >
                 <View style={s.rowContent}>
                   <Text style={s.rowLabel}>goal</Text>
-                  <Text style={s.rowValue}>{progress?.goal?.toLocaleString?.() ?? "—"}</Text>
+                  <Text style={s.rowValue}>{stepsData.goal.toLocaleString()}</Text>
                 </View>
               </ImageBackground>
 
@@ -178,57 +183,91 @@ export default function StepsTestScreen() {
                 <View style={s.rowContent}>
                   <Text style={s.rowLabel}>remaining</Text>
                   <Text style={s.rowValue}>
-                    {progress?.remaining?.toLocaleString?.() ?? "—"}
+                    {stepsData.remaining.toLocaleString()}
                   </Text>
+                </View>
+              </ImageBackground>
+
+              {/* Current Streak */}
+              <ImageBackground
+                source={A.longBrown}
+                resizeMode="stretch"
+                style={s.row}
+                imageStyle={pixelArtWebOnly}
+              >
+                <View style={s.rowContent}>
+                  <Text style={s.rowLabel}>streak 🔥</Text>
+                  <Text style={s.rowValue}>{userData?.currentStreak || 0} days</Text>
+                </View>
+              </ImageBackground>
+
+              {/* Longest Streak */}
+              <ImageBackground
+                source={A.longBrown}
+                resizeMode="stretch"
+                style={s.row}
+                imageStyle={pixelArtWebOnly}
+              >
+                <View style={s.rowContent}>
+                  <Text style={s.rowLabel}>best streak</Text>
+                  <Text style={s.rowValue}>{userData?.longestStreak || 0} days</Text>
+                </View>
+              </ImageBackground>
+
+              {/* Total Steps */}
+              <ImageBackground
+                source={A.longBrown}
+                resizeMode="stretch"
+                style={s.row}
+                imageStyle={pixelArtWebOnly}
+              >
+                <View style={s.rowContent}>
+                  <Text style={s.rowLabel}>total steps</Text>
+                  <Text style={s.rowValue}>{userData?.totalSteps.toLocaleString() || "0"}</Text>
                 </View>
               </ImageBackground>
 
               {/* Progress Ring */}
               <ProgressRing progress={pct} />
-
-              {/* Error Message */}
-              {error ? (
-                <Text style={s.errorText}>{error}</Text>
-              ) : null}
             </View>
           </ImageBackground>
         </View>
       </ImageBackground>
-    </View>
+    </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { 
-    flex: 1, 
-    backgroundColor: "#fff" 
+  screen: {
+    flex: 1,
+    backgroundColor: "#fff"
   },
-  bg: { 
-    flex: 1, 
-    width: "100%", 
+  bg: {
+    flex: 1,
+    width: "100%",
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
-  center: { 
-    width: "100%", 
-    maxWidth: 440, 
+  center: {
+    width: "100%",
+    maxWidth: 440,
     alignItems: "center",
     justifyContent: "center",
   },
   panel: {
     width: 360,
-    height: 640,
+    height: 720,
     alignItems: "center",
     paddingTop: 20,
     paddingHorizontal: 16,
   },
-  closeBadge: { 
-    position: "absolute", 
-    top: -10, 
-    right: -8, 
-    width: 64, 
-    height: 64 
+  closeBadge: {
+    position: "absolute",
+    top: -10,
+    right: -8,
+    width: 64,
+    height: 64
   },
   titleContainer: {
     width: "100%",
