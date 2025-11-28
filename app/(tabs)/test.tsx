@@ -28,6 +28,7 @@ const A = {
   grey: require("../../assets/maiArt/button_grey.png"),
   close: require("../../assets/maiArt/button_square.png"),
   ringFrame: require("../../assets/maiArt/button_grey.png"),
+  fire: require("../../assets/maiArt/fire.png"),
 };
 
 export default function StatsScreen() {
@@ -84,7 +85,7 @@ export default function StatsScreen() {
               cx={size / 2}
               cy={size / 2}
               r={radius}
-              stroke="#ff2d55"
+              stroke="#FF746C"
               strokeWidth={strokeWidth}
               strokeDasharray={`${circumference} ${circumference}`}
               strokeDashoffset={dashOffset}
@@ -196,7 +197,14 @@ export default function StatsScreen() {
                 imageStyle={pixelArtWebOnly}
               >
                 <View style={s.rowContent}>
-                  <Text style={s.rowLabel}>streak 🔥</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <Text style={s.rowLabel}>streak</Text>
+                    <Image
+                      source={A.fire}
+                      style={{ width: 18, height: 18 }}
+                      resizeMode="contain"
+                    />
+                  </View>
                   <Text style={s.rowValue}>{userData?.currentStreak || 0} days</Text>
                 </View>
               </ImageBackground>
