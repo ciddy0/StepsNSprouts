@@ -52,6 +52,7 @@ export interface User {
   totalSteps: number;
   currentStreak: number;
   longestStreak: number;
+  lastStreakUpdateDate?: string; // ISO date string (YYYY-MM-DD) of last streak update
   createdAt: string;
   lastActive: string;
   healthKitConnected: boolean;

@@ -22,12 +22,12 @@ import { getUserDocument, updateUserGarden, updateUserProfile } from "./userServ
  * Get daily steps for a specific date
  */
 export async function getDailySteps(
-  userId: string, 
+  userId: string,
   date: string
 ): Promise<DailySteps | null> {
   const dailyStepsRef = doc(db, 'users', userId, 'dailySteps', date);
   const docSnap = await getDoc(dailyStepsRef);
-  
+
   if (docSnap.exists()) {
     return docSnap.data() as DailySteps;
   }
@@ -43,11 +43,11 @@ export async function setDailySteps(
   steps: number
 ): Promise<void> {
   const dailyStepsRef = doc(db, `users/${userId}/dailySteps`, date);
-  
+
   // Get previous steps for this day (if any)
   const existingDaySteps = await getDailySteps(userId, date);
   const previousSteps = existingDaySteps?.steps || 0;
-  
+
   const dailyStepsData: DailySteps = {
     id: date,
     userId,
@@ -55,15 +55,15 @@ export async function setDailySteps(
     steps,
     lastSynced: new Date().toISOString()
   };
-  
+
   await setDoc(dailyStepsRef, dailyStepsData);
-  
+
   // Calculate the difference in steps
   const stepDifference = steps - previousSteps;
-  
+
   // Update user's total steps
   await updateTotalSteps(userId);
-  
+
   // Update tree's totalStepsContributed if there are new steps
   if (stepDifference > 0) {
     await updateTreeSteps(userId, stepDifference);
@@ -76,15 +76,15 @@ export async function setDailySteps(
 async function updateTreeSteps(userId: string, additionalSteps: number): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const tree = { ...user.garden.tree };
   tree.totalStepsContributed += additionalSteps;
-  
+
   // Growth logic: every 10,000 steps = 1 growth level (max level 6)
   tree.growthLevel = Math.min(Math.floor(tree.totalStepsContributed / 10000), 6);
-  
+
   await updateUserGarden(userId, { tree });
-  
+
   console.log(`[Tree] Updated: +${additionalSteps} steps, total: ${tree.totalStepsContributed}, level: ${tree.growthLevel}`);
 }
 
@@ -99,18 +99,18 @@ export async function syncTodaysStepsFromHealthKit(userId: string): Promise<{
   try {
     // Get steps from HealthKit/device
     const steps = await getTodaysSteps();
-    
+
     // Get today's date in ISO format
     const today = new Date().toISOString().split('T')[0];
-    
+
     // Save to Firestore (this will also update tree)
     await setDailySteps(userId, today, steps);
-    
+
     // Update streak after syncing
     await updateStreak(userId);
-    
+
     console.log(`[DailySteps] Synced ${steps} steps for ${today}`);
-    
+
     return { steps, synced: true };
   } catch (error) {
     console.error('[DailySteps] Failed to sync steps:', error);
@@ -132,26 +132,26 @@ export async function getTodaysStepsWithProgress(userId: string): Promise<{
 }> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const today = new Date().toISOString().split('T')[0];
   const todaySteps = await getDailySteps(userId, today);
-  
+
   // Use cached data if available, otherwise return zeros
   // Syncing should be done explicitly via syncTodaysStepsFromHealthKit
   let steps: number = 0;
   let lastSynced: string | null = null;
-  
+
   if (todaySteps) {
     steps = todaySteps.steps;
     lastSynced = todaySteps.lastSynced;
   }
-  
+
   // Calculate progress based on cached steps
   const goal = user.stepGoal;
   const progress = Math.min(steps / goal, 1);
   const goalMet = steps >= goal;
   const remaining = Math.max(goal - steps, 0);
-  
+
   return {
     steps,
     goal,
@@ -177,7 +177,7 @@ export async function getDailyStepsRange(
     where("date", "<=", endDate),
     orderBy("date", "asc")
   );
-  
+
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as DailySteps);
 }
@@ -195,7 +195,7 @@ export async function getRecentDailySteps(
     orderBy("date", "desc"),
     limit(limitCount)
   );
-  
+
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as DailySteps);
 }
@@ -211,34 +211,18 @@ export async function getWeeklyStepSummary(userId: string): Promise<{
 }> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const recentSteps = await getRecentDailySteps(userId, 7);
-  
+
   const totalSteps = recentSteps.reduce((sum, day) => sum + day.steps, 0);
   const averageSteps = recentSteps.length > 0 ? Math.floor(totalSteps / recentSteps.length) : 0;
-  
+
   return {
     totalSteps,
     averageSteps,
     daysWithData: recentSteps.length,
     dailyBreakdown: recentSteps
   };
-}
-
-/**
- * Check if user met their goal for a specific date
- */
-export async function didMeetGoalOnDate(
-  userId: string,
-  date: string
-): Promise<boolean> {
-  const user = await getUserDocument(userId);
-  if (!user) throw new Error("User not found");
-  
-  const daySteps = await getDailySteps(userId, date);
-  if (!daySteps) return false;
-  
-  return daySteps.steps >= user.stepGoal;
 }
 
 /**
@@ -250,63 +234,63 @@ export async function updateStreak(userId: string): Promise<{
 }> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split('T')[0];
-  
+
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
-  
-  console.log('Looking for yesterday:', yesterdayStr); // Debug log
-  console.log('Looking for today:', todayStr); // Debug log
-  
+
   // Get yesterday's and today's steps
   const [yesterdaySteps, todaySteps] = await Promise.all([
     getDailySteps(userId, yesterdayStr),
     getDailySteps(userId, todayStr)
   ]);
-  
-  console.log('Yesterday steps:', yesterdaySteps); // Debug log
-  console.log('Today steps:', todaySteps); // Debug log
-  
-  let currentStreak = user.currentStreak || 0; // Default to 0 if undefined
-  
-  // Check if today's goal was met
-  const todayGoalMet = todaySteps && todaySteps.steps >= user.stepGoal;
-  
-  if (todayGoalMet) {
-    // If today's goal is met, check if we should increment or start fresh
-    const yesterdayGoalMet = yesterdaySteps && yesterdaySteps.steps >= user.stepGoal;
-    
-    if (yesterdayGoalMet || currentStreak === 0) {
-      // Continue streak or start new one
-      currentStreak++;
-    } else {
-      // Streak was broken, start fresh
-      currentStreak = 1;
-    }
-  } else {
-    // Today's goal not met yet
-    // Check if yesterday's goal was met to maintain current streak
-    const yesterdayGoalMet = yesterdaySteps && yesterdaySteps.steps >= user.stepGoal;
-    
-    if (!yesterdayGoalMet && currentStreak > 0) {
-      // Yesterday's goal wasn't met, reset streak
-      currentStreak = 0;
-    }
-    // If yesterday's goal was met, keep current streak as is (waiting for today)
+
+  let currentStreak = user.currentStreak || 0;
+
+  // Check yesterday: if no document OR didn't meet goal → reset streak to 0
+  if (!yesterdaySteps || yesterdaySteps.steps < user.stepGoal) {
+    currentStreak = 0;
   }
-  
-  // Update longest streak if needed
+
+  // Check today: if goal met AND we haven't counted today yet → increment
+  const todayGoalMet = todaySteps && todaySteps.steps >= user.stepGoal;
+
+  if (todayGoalMet) {
+    // Only increment if we haven't already counted today
+    // Check if the last streak update was before today
+    const lastStreakDate = user.lastStreakUpdateDate || '';
+
+    if (lastStreakDate < todayStr) {
+      // This is the first time today we're counting the streak
+      currentStreak += 1;
+
+      // Update longest streak if needed
+      const longestStreak = Math.max(user.longestStreak || 0, currentStreak);
+
+      await updateUserProfile(userId, {
+        currentStreak,
+        longestStreak,
+        lastStreakUpdateDate: todayStr
+      });
+
+      return { currentStreak, longestStreak };
+    }
+  }
+
+  // If we didn't increment (either goal not met or already counted today),
+  // just update in case yesterday broke the streak
   const longestStreak = Math.max(user.longestStreak || 0, currentStreak);
-  
-  await updateUserProfile(userId, { 
-    currentStreak, 
-    longestStreak 
+
+  await updateUserProfile(userId, {
+    currentStreak,
+    longestStreak,
+    lastStreakUpdateDate: user.lastStreakUpdateDate || ''
   });
-  
+
   return { currentStreak, longestStreak };
 }
 /**
@@ -315,12 +299,12 @@ export async function updateStreak(userId: string): Promise<{
 async function updateTotalSteps(userId: string): Promise<void> {
   const dailyStepsRef = collection(db, `users/${userId}/dailySteps`);
   const querySnapshot = await getDocs(dailyStepsRef);
-  
+
   let totalSteps = 0;
   querySnapshot.forEach(doc => {
     totalSteps += doc.data().steps || 0;
   });
-  
+
   await updateUserProfile(userId, { totalSteps });
 }
 
@@ -329,22 +313,22 @@ async function updateTotalSteps(userId: string): Promise<void> {
  */
 export async function getTodaySteps(userId: string): Promise<number> {
   const today = new Date().toISOString().split('T')[0];
-  
+
   // Try to get from cache first
   const todaySteps = await getDailySteps(userId, today);
-  
+
   if (todaySteps) {
     // Check if data is stale (older than 5 minutes)
     const lastSynced = new Date(todaySteps.lastSynced);
     const now = new Date();
     const minutesSinceSync = (now.getTime() - lastSynced.getTime()) / (1000 * 60);
-    
+
     if (minutesSinceSync < 5) {
       // Data is fresh, return cached value
       return todaySteps.steps;
     }
   }
-  
+
   // Data is stale or doesn't exist, sync fresh data
   const syncResult = await syncTodaysStepsFromHealthKit(userId);
   return syncResult.steps;
@@ -368,9 +352,9 @@ export async function getStepHistory(
 ): Promise<Array<{ date: string; steps: number; goalMet: boolean }>> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const recentSteps = await getRecentDailySteps(userId, days);
-  
+
   return recentSteps.map(day => ({
     date: day.date,
     steps: day.steps,
@@ -387,10 +371,10 @@ export function setupAutoSync(
   intervalMinutes: number = 15
 ): number {
   console.log(`[DailySteps] Setting up auto-sync every ${intervalMinutes} minutes`);
-  
+
   // Initial sync
   syncTodaysStepsFromHealthKit(userId);
-  
+
   // Setup periodic sync
   return setInterval(() => {
     syncTodaysStepsFromHealthKit(userId);
