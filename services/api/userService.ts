@@ -1,3 +1,4 @@
+import { ALL_DECORATION_SLOTS, getRandomEmptySlot as getRandomEmptySlotHelper } from "@/utils/slotHelpers";
 import { User as FirebaseUser } from "firebase/auth";
 import {
   collection,
@@ -146,24 +147,32 @@ export async function updateUserGarden(
   
   await updateUserProfile(userId, { garden: updatedGarden });
 }
+// ---------------------------------------------------------------------------------------------
+// RANDOMIZED PLACEMENT HELPER - uses imported function from slotHelpers
+// No need for local implementation; using getRandomEmptySlotHelper from @/utils/slotHelpers
 
 /**
- * Place decoration in garden
+ * Place decoration in garden at specific coordinates
+ * OR randomly in an empty slot if randomSlot is true
  */
 export async function placeDecorationInGarden(
   userId: string,
   instanceId: string,
-  x: number,
-  y: number
+  x?: number,
+  y?: number,
+  randomSlot: boolean = false,
+  skipInventoryCheck: boolean = false
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
   
-  // Check if instance exists in inventory
-  const hasInstance = user.inventory.some(item => 
-    item.instances.some(inst => inst.instanceId === instanceId)
-  );
-  if (!hasInstance) throw new Error("Decoration not found in inventory");
+  // Check if instance exists in inventory (skip if this is from auto-placement after purchase)
+  if (!skipInventoryCheck) {
+    const hasInstance = user.inventory.some(item => 
+      item.instances.some(inst => inst.instanceId === instanceId)
+    );
+    if (!hasInstance) throw new Error("Decoration not found in inventory");
+  }
   
   // Check if already placed
   const alreadyPlaced = user.garden.decorations.some(
@@ -176,16 +185,41 @@ export async function placeDecorationInGarden(
     throw new Error("Maximum decorations reached");
   }
   
+  let finalX = x;
+  let finalY = y;
+  
+  // RANDOMIZED PLACEMENT - NEW CODE
+  if (randomSlot) {
+    console.log("🎲 Attempting random placement...");
+    console.log("Current decorations:", user.garden.decorations);
+    console.log("All available slots:", ALL_DECORATION_SLOTS);
+    const emptySlot = getRandomEmptySlotHelper(user.garden.decorations);
+    console.log("Found empty slot:", emptySlot);
+    if (!emptySlot) {
+      throw new Error("No empty slots available");
+    }
+    finalX = emptySlot.x;
+    finalY = emptySlot.y;
+    console.log("✅ Random slot selected:", { x: finalX, y: finalY });
+  }
+  
+  // Validate coordinates are provided
+  if (finalX === undefined || finalY === undefined) {
+    throw new Error("Coordinates must be provided");
+  }
+  
   const newDecoration = {
     instanceId,
-    x,
-    y,
+    x: finalX,
+    y: finalY,
     dateAdded: new Date().toISOString()
   };
   
   const updatedDecorations = [...user.garden.decorations, newDecoration];
   await updateUserGarden(userId, { decorations: updatedDecorations });
 }
+// ---------------------------------------------------------------------------------------------
+
 
 /**
  * Remove decoration from garden
