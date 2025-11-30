@@ -35,7 +35,6 @@ export default function HomeScreen() {
     3: require("../../assets/maiArt/tree0/tree_stage_3.png"),
     4: require("../../assets/maiArt/tree0/tree_stage_4.png"),
     5: require("../../assets/maiArt/tree0/tree_stage_5.png"),
-    6: require("../../assets/maiArt/tree0/tree_stage_6.png"),
   };
 
   const PRESET_AVATARS: { id: number; source: any }[] = [

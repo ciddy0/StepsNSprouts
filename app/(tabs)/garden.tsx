@@ -362,7 +362,12 @@ export default function GardenScreen() {
           <View style={styles.treeContainer}>
             <Image
               source={getTreeImage(currentTreeStage)}
-              style={styles.treeImage}
+              style={[
+                styles.treeImage,
+                currentTreeStage === 0 && { width: 20, height: 20 }, // Seed: much smaller
+                currentTreeStage === 1 && { width: 100, height: 100 }, // Sapling: smaller
+                currentTreeStage >= 2 && { width: 300, height: 300 }, // Tree: much larger
+              ]}
               resizeMode="contain"
             />
           </View>
