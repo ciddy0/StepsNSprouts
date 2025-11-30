@@ -1,3 +1,4 @@
+import { HamburgerMenu } from '@/components/HamburgerMenu';
 import itemMap from '@/constants/inventoryItems';
 import { getUserDocument, placeDecorationInGarden, removeDecorationFromGarden } from '@/services/api/userService';
 import { auth } from '@/services/firebase/config';
@@ -41,7 +42,7 @@ export default function GardenScreen() {
 
   // NEW CODE - 5 SLOTS
   const decorationSlots = ALL_DECORATION_SLOTS;
-  
+
 
   const fetchUserData = async () => {
     try {
@@ -54,7 +55,7 @@ export default function GardenScreen() {
           setTotalStepsContributed(userDoc.garden?.tree?.totalStepsContributed || 0);
           setInventory(userDoc.inventory || []);
           setPlacedDecorations(userDoc.garden?.decorations || []);
-          
+
           // Debug logging
           console.log('User inventory:', userDoc.inventory);
           console.log('Placed decorations:', userDoc.garden?.decorations);
@@ -114,11 +115,11 @@ export default function GardenScreen() {
     const nextLevelSteps = (treeLevel + 1) * 10000;
     const stepsInCurrentLevel = totalStepsContributed - currentLevelSteps;
     const stepsNeededForLevel = nextLevelSteps - currentLevelSteps;
-    
+
     if (treeLevel >= 5) {
       return { progress: 1, stepsInLevel: 0, stepsNeeded: 0, isMaxLevel: true };
     }
-    
+
     return {
       progress: Math.min(stepsInCurrentLevel / stepsNeededForLevel, 1),
       stepsInLevel: stepsInCurrentLevel,
@@ -130,10 +131,10 @@ export default function GardenScreen() {
   const currentTreeStage = getTreeStage(treeLevel);
   const progressInfo = getProgressToNextLevel();
 
-// OLD CODE:
-// const getDecorationInSlot = (slotX: number, slotY: number) => {
-//   return placedDecorations.find(dec => dec.x === slotX && dec.y === slotY);
-// };
+  // OLD CODE:
+  // const getDecorationInSlot = (slotX: number, slotY: number) => {
+  //   return placedDecorations.find(dec => dec.x === slotX && dec.y === slotY);
+  // };
 
   // NEW CODE - Check if a slot is occupied by finding decoration at coordinates
   const getSlotDecoration = (slotX: number, slotY: number) => {
@@ -178,7 +179,7 @@ export default function GardenScreen() {
   const getAvailableInstances = () => {
     const placedInstanceIds = placedDecorations.map(dec => dec.instanceId);
     const available: { decorationId: string; instanceId: string; name: string | null }[] = [];
-    
+
     inventory.forEach(item => {
       item.instances.forEach(instance => {
         if (!placedInstanceIds.includes(instance.instanceId)) {
@@ -190,11 +191,11 @@ export default function GardenScreen() {
         }
       });
     });
-    
+
     console.log('Available instances:', available);
     console.log('Total inventory items:', inventory.length);
     console.log('Placed decorations count:', placedDecorations.length);
-    
+
     return available;
   };
 
@@ -222,6 +223,7 @@ export default function GardenScreen() {
 
   return (
     <View style={styles.container}>
+      <HamburgerMenu />
       {/* Blue Sky Background - Upper Half */}
       <ImageBackground
         source={require('@/assets/blue_background.png')}
@@ -244,21 +246,21 @@ export default function GardenScreen() {
             <Text style={styles.treeStageText}>
               Stage {currentTreeStage} / 5
             </Text>
-            
+
             {!progressInfo.isMaxLevel ? (
               <>
                 {/* Progress Bar */}
                 <View style={styles.progressBarContainer}>
                   <View style={styles.progressBarBackground}>
-                    <View 
+                    <View
                       style={[
                         styles.progressBarFill,
                         { width: `${progressInfo.progress * 100}%` }
-                      ]} 
+                      ]}
                     />
                   </View>
                 </View>
-                
+
                 <Text style={styles.progressText}>
                   {progressInfo.stepsInLevel.toLocaleString()} / {progressInfo.stepsNeeded.toLocaleString()} steps
                 </Text>
@@ -508,7 +510,7 @@ export default function GardenScreen() {
               {(() => {
                 const availableItems = getAvailableInstances();
                 console.log('Rendering inventory items, count:', availableItems.length);
-                
+
                 if (availableItems.length === 0) {
                   return (
                     <Text style={styles.emptyInventoryText}>
@@ -516,7 +518,7 @@ export default function GardenScreen() {
                     </Text>
                   );
                 }
-                
+
                 return availableItems.map((item) => {
                   console.log('Rendering item:', item.decorationId, item.instanceId);
                   return (
@@ -571,9 +573,9 @@ const styles = StyleSheet.create({
   treePositioner: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    flex: 1, 
-    paddingBottom: 0, 
-    margin: -100, 
+    flex: 1,
+    paddingBottom: 0,
+    margin: -100,
   },
   growthInfoContainer: {
     alignItems: 'center',
@@ -771,7 +773,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-    // NEW CODE - Updated decorations layout styles
+  // NEW CODE - Updated decorations layout styles
   decorationsContainer: {
     alignItems: 'center',
     justifyContent: 'center',

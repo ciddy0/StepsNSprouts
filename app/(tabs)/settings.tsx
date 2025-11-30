@@ -1,3 +1,4 @@
+import { HamburgerMenu } from "@/components/HamburgerMenu";
 import PrivacyModal from "@/components/PrivacyModal";
 import TermsModal from "@/components/TermsModal";
 import { useAuth } from "@/context/AuthContext";
@@ -123,6 +124,7 @@ export default function Settings() {
 
   return (
     <View style={styles.screen}>
+      <HamburgerMenu />
       <ImageBackground source={A.bg} style={styles.bg} resizeMode="cover" imageStyle={pixel}>
         <View style={styles.center}>
           <ImageBackground source={A.panel} style={styles.panel} resizeMode="contain" imageStyle={pixel}>

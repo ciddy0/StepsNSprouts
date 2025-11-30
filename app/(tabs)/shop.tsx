@@ -3,6 +3,7 @@
 // Minimal screen to buy the Mystery Box and display plain text results.
 // Frontend can later replace the text with styled UI.
 
+import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { SHOP_ITEMS } from "@/constants/shop";
 import { useAuth } from "@/context/AuthContext";
 import { buyMysteryBox } from "@/services/api/lootService";
@@ -61,44 +62,47 @@ export default function ShopScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 20, fontWeight: "700" }}>Shop (Dev Minimal)</Text>
+    <>
+      <HamburgerMenu />
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <Text style={{ fontSize: 20, fontWeight: "700" }}>Shop (Dev Minimal)</Text>
 
-      {!box && <Text>No loot boxes available. Add one in constants/shop.ts.</Text>}
+        {!box && <Text>No loot boxes available. Add one in constants/shop.ts.</Text>}
 
-      {box && (
-        <View style={{ gap: 8 }}>
-          <Text style={{ fontSize: 16, fontWeight: "600" }}>{box.name}</Text>
-          <Text>Price: {box.price} pomes</Text>
-          <Button title="Buy Mystery Box" onPress={buy} disabled={status === "loading"} />
-        </View>
-      )}
+        {box && (
+          <View style={{ gap: 8 }}>
+            <Text style={{ fontSize: 16, fontWeight: "600" }}>{box.name}</Text>
+            <Text>Price: {box.price} pomes</Text>
+            <Button title="Buy Mystery Box" onPress={buy} disabled={status === "loading"} />
+          </View>
+        )}
 
-      {status === "loading" && <ActivityIndicator />}
+        {status === "loading" && <ActivityIndicator />}
 
-      {/* ===== FE PICKUP: Replace this with a styled success card / modal ===== */}
-      {status === "done" && (
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>Result</Text>
-          <Text selectable style={{ fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }) }}>
-            {log}
-          </Text>
-          {award && (
-            <Text>(FE: map decorationId "{award.decorationId}" to art and show a reveal.)</Text>
-          )}
-          {newBalance !== null && <Text>(FE: update wallet display to {newBalance} pomes.)</Text>}
-        </View>
-      )}
+        {/* ===== FE PICKUP: Replace this with a styled success card / modal ===== */}
+        {status === "done" && (
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontWeight: "600" }}>Result</Text>
+            <Text selectable style={{ fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }) }}>
+              {log}
+            </Text>
+            {award && (
+              <Text>(FE: map decorationId "{award.decorationId}" to art and show a reveal.)</Text>
+            )}
+            {newBalance !== null && <Text>(FE: update wallet display to {newBalance} pomes.)</Text>}
+          </View>
+        )}
 
-      {/* ===== FE PICKUP: Replace with a styled error toast ===== */}
-      {status === "error" && (
-        <View style={{ gap: 6 }}>
-          <Text style={{ fontWeight: "600" }}>Error</Text>
-          <Text selectable style={{ fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }) }}>
-            {log}
-          </Text>
-        </View>
-      )}
-    </ScrollView>
+        {/* ===== FE PICKUP: Replace with a styled error toast ===== */}
+        {status === "error" && (
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontWeight: "600" }}>Error</Text>
+            <Text selectable style={{ fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }) }}>
+              {log}
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </>
   );
 }

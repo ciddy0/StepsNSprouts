@@ -16,6 +16,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 
+import { HamburgerMenu } from "@/components/HamburgerMenu";
 import Svg, { Circle } from "react-native-svg";
 
 export const options = { headerShown: false };
@@ -113,135 +114,139 @@ export default function StatsScreen() {
   }
 
   return (
-    <ScrollView
-      style={s.screen}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <ImageBackground
-        source={A.bg}
-        resizeMode="cover"
-        style={s.bg}
-        imageStyle={pixelArtWebOnly}
+    <>
+      <HamburgerMenu />
+      <ScrollView
+        style={s.screen}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        <View style={s.center}>
-          <ImageBackground
-            source={A.panel}
-            resizeMode="contain"
-            style={s.panel}
-            imageStyle={pixelArtWebOnly}
-          >
-            <Image source={A.close} style={s.closeBadge} resizeMode="contain" />
+        <ImageBackground
+          source={A.bg}
+          resizeMode="cover"
+          style={s.bg}
+          imageStyle={pixelArtWebOnly}
+        >
+          <View style={s.center}>
+            <ImageBackground
+              source={A.panel}
+              resizeMode="contain"
+              style={s.panel}
+              imageStyle={pixelArtWebOnly}
+            >
+              <Image source={A.close} style={s.closeBadge} resizeMode="contain" />
 
-            {/* Title */}
-            <View style={s.titleContainer}>
-              <ImageBackground
-                source={A.longBrown}
-                resizeMode="stretch"
-                style={s.titlePill}
-                imageStyle={pixelArtWebOnly}
-              >
-                <Text style={s.titleText}>stats</Text>
-              </ImageBackground>
-            </View>
+              {/* Title */}
+              <View style={s.titleContainer}>
+                <ImageBackground
+                  source={A.longBrown}
+                  resizeMode="stretch"
+                  style={s.titlePill}
+                  imageStyle={pixelArtWebOnly}
+                >
+                  <Text style={s.titleText}>stats</Text>
+                </ImageBackground>
+              </View>
 
-            {/* Content Container */}
-            <View style={s.contentContainer}>
-              {/* Today's Steps */}
-              <ImageBackground
-                source={A.longBrown}
-                resizeMode="stretch"
-                style={s.row}
-                imageStyle={pixelArtWebOnly}
-              >
-                <View style={s.rowContent}>
-                  <Text style={s.rowLabel}>today</Text>
-                  <Text style={s.rowValue}>{stepsData.steps.toLocaleString()}</Text>
-                </View>
-              </ImageBackground>
-
-              {/* Goal */}
-              <ImageBackground
-                source={A.longBrown}
-                resizeMode="stretch"
-                style={s.row}
-                imageStyle={pixelArtWebOnly}
-              >
-                <View style={s.rowContent}>
-                  <Text style={s.rowLabel}>goal</Text>
-                  <Text style={s.rowValue}>{stepsData.goal.toLocaleString()}</Text>
-                </View>
-              </ImageBackground>
-
-              {/* Remaining */}
-              <ImageBackground
-                source={A.longBrown}
-                resizeMode="stretch"
-                style={s.row}
-                imageStyle={pixelArtWebOnly}
-              >
-                <View style={s.rowContent}>
-                  <Text style={s.rowLabel}>remaining</Text>
-                  <Text style={s.rowValue}>
-                    {stepsData.remaining.toLocaleString()}
-                  </Text>
-                </View>
-              </ImageBackground>
-
-              {/* Current Streak */}
-              <ImageBackground
-                source={A.longBrown}
-                resizeMode="stretch"
-                style={s.row}
-                imageStyle={pixelArtWebOnly}
-              >
-                <View style={s.rowContent}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={s.rowLabel}>streak</Text>
-                    <Image
-                      source={A.fire}
-                      style={{ width: 18, height: 18 }}
-                      resizeMode="contain"
-                    />
+              {/* Content Container */}
+              <View style={s.contentContainer}>
+                {/* Today's Steps */}
+                <ImageBackground
+                  source={A.longBrown}
+                  resizeMode="stretch"
+                  style={s.row}
+                  imageStyle={pixelArtWebOnly}
+                >
+                  <View style={s.rowContent}>
+                    <Text style={s.rowLabel}>today</Text>
+                    <Text style={s.rowValue}>{stepsData.steps.toLocaleString()}</Text>
                   </View>
-                  <Text style={s.rowValue}>{userData?.currentStreak || 0} days</Text>
-                </View>
-              </ImageBackground>
+                </ImageBackground>
 
-              {/* Longest Streak */}
-              <ImageBackground
-                source={A.longBrown}
-                resizeMode="stretch"
-                style={s.row}
-                imageStyle={pixelArtWebOnly}
-              >
-                <View style={s.rowContent}>
-                  <Text style={s.rowLabel}>best streak</Text>
-                  <Text style={s.rowValue}>{userData?.longestStreak || 0} days</Text>
-                </View>
-              </ImageBackground>
+                {/* Goal */}
+                <ImageBackground
+                  source={A.longBrown}
+                  resizeMode="stretch"
+                  style={s.row}
+                  imageStyle={pixelArtWebOnly}
+                >
+                  <View style={s.rowContent}>
+                    <Text style={s.rowLabel}>goal</Text>
+                    <Text style={s.rowValue}>{stepsData.goal.toLocaleString()}</Text>
+                  </View>
+                </ImageBackground>
 
-              {/* Total Steps */}
-              <ImageBackground
-                source={A.longBrown}
-                resizeMode="stretch"
-                style={s.row}
-                imageStyle={pixelArtWebOnly}
-              >
-                <View style={s.rowContent}>
-                  <Text style={s.rowLabel}>total steps</Text>
-                  <Text style={s.rowValue}>{userData?.totalSteps.toLocaleString() || "0"}</Text>
-                </View>
-              </ImageBackground>
+                {/* Remaining */}
+                <ImageBackground
+                  source={A.longBrown}
+                  resizeMode="stretch"
+                  style={s.row}
+                  imageStyle={pixelArtWebOnly}
+                >
+                  <View style={s.rowContent}>
+                    <Text style={s.rowLabel}>remaining</Text>
+                    <Text style={s.rowValue}>
+                      {stepsData.remaining.toLocaleString()}
+                    </Text>
+                  </View>
+                </ImageBackground>
 
-              {/* Progress Ring */}
-              <ProgressRing progress={pct} />
-            </View>
-          </ImageBackground>
-        </View>
-      </ImageBackground>
-    </ScrollView>
+                {/* Current Streak */}
+                <ImageBackground
+                  source={A.longBrown}
+                  resizeMode="stretch"
+                  style={s.row}
+                  imageStyle={pixelArtWebOnly}
+                >
+                  <View style={s.rowContent}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                      <Text style={s.rowLabel}>streak</Text>
+                      <Image
+                        source={A.fire}
+                        style={{ width: 18, height: 18 }}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Text style={s.rowValue}>{userData?.currentStreak || 0} days</Text>
+                  </View>
+                </ImageBackground>
+
+                {/* Longest Streak */}
+                <ImageBackground
+                  source={A.longBrown}
+                  resizeMode="stretch"
+                  style={s.row}
+                  imageStyle={pixelArtWebOnly}
+                >
+                  <View style={s.rowContent}>
+                    <Text style={s.rowLabel}>best streak</Text>
+                    <Text style={s.rowValue}>{userData?.longestStreak || 0} days</Text>
+                  </View>
+                </ImageBackground>
+
+                {/* Total Steps */}
+                <ImageBackground
+                  source={A.longBrown}
+                  resizeMode="stretch"
+                  style={s.row}
+                  imageStyle={pixelArtWebOnly}
+                >
+                  <View style={s.rowContent}>
+                    <Text style={s.rowLabel}>total steps</Text>
+                    <Text style={s.rowValue}>{userData?.totalSteps.toLocaleString() || "0"}</Text>
+                  </View>
+                </ImageBackground>
+
+                {/* Progress Ring */}
+                <ProgressRing progress={pct} />
+              </View>
+            </ImageBackground>
+          </View>
+        </ImageBackground>
+      </ScrollView>
+    </>
   );
 }
 
@@ -253,22 +258,25 @@ const s = StyleSheet.create({
   bg: {
     flex: 1,
     width: "100%",
-    height: "100%",
+    minHeight: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
   center: {
+    flex: 1,
     width: "100%",
     maxWidth: 440,
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 20,
   },
   panel: {
     width: 360,
-    height: 720,
+    minHeight: 680,
     alignItems: "center",
     paddingTop: 20,
     paddingHorizontal: 16,
+    paddingBottom: 20,
   },
   closeBadge: {
     position: "absolute",

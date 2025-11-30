@@ -1,4 +1,5 @@
 // app/(tabs)/achievements.tsx
+import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { useAuth } from "@/context/AuthContext";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useCallback } from "react";
@@ -27,47 +28,50 @@ export default function AchievementsScreen() {
 
   // Render achievements
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 20, fontWeight: "700" }}>{header}</Text>
+    <>
+      <HamburgerMenu />
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <Text style={{ fontSize: 20, fontWeight: "700" }}>{header}</Text>
 
-      {!userId && <Text>Sign in to view achievements.</Text>}
+        {!userId && <Text>Sign in to view achievements.</Text>}
 
-      {status === "loading" && <ActivityIndicator />}
+        {status === "loading" && <ActivityIndicator />}
 
-      {status === "error" && (
-        <View>
-          <Text>Something went wrong.</Text>
-          <Text selectable>{String(error)}</Text>
-          <View style={{ height: 8 }} />
-          <Button title="Try refresh" onPress={onRefresh} />
-        </View>
-      )}
+        {status === "error" && (
+          <View>
+            <Text>Something went wrong.</Text>
+            <Text selectable>{String(error)}</Text>
+            <View style={{ height: 8 }} />
+            <Button title="Try refresh" onPress={onRefresh} />
+          </View>
+        )}
 
-      {status === "ready" && (
-        <View style={{ gap: 8 }}>
-          <Text>Total: {data.length}</Text>
-          <View style={{ height: 8 }} />
-          <Button title="Manual refresh" onPress={onRefresh} />
-          <View style={{ height: 12 }} />
-          {data.length === 0 ? (
-            <Text>No achievements yet.</Text>
-          ) : (
-            data.map((a) => (
-              <View key={a.id + a.dateAcquired} style={{ paddingVertical: 6 }}>
-                <Text>
-                  • {a.title} [{a.tier}]
-                </Text>
-                <Text>  {a.description}</Text>
-                <Text>  Earned: {a.dateAcquired}</Text>
-                <Text>  Reward: {a.reward.pomes} pomes</Text>
-                <Text>
-                  {`  Requirement: ${a.requirement.type} = ${a.requirement.value}`}
-                </Text>
-              </View>
-            ))
-          )}
-        </View>
-      )}
-    </ScrollView>
+        {status === "ready" && (
+          <View style={{ gap: 8 }}>
+            <Text>Total: {data.length}</Text>
+            <View style={{ height: 8 }} />
+            <Button title="Manual refresh" onPress={onRefresh} />
+            <View style={{ height: 12 }} />
+            {data.length === 0 ? (
+              <Text>No achievements yet.</Text>
+            ) : (
+              data.map((a) => (
+                <View key={a.id + a.dateAcquired} style={{ paddingVertical: 6 }}>
+                  <Text>
+                    • {a.title} [{a.tier}]
+                  </Text>
+                  <Text>  {a.description}</Text>
+                  <Text>  Earned: {a.dateAcquired}</Text>
+                  <Text>  Reward: {a.reward.pomes} pomes</Text>
+                  <Text>
+                    {`  Requirement: ${a.requirement.type} = ${a.requirement.value}`}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+        )}
+      </ScrollView>
+    </>
   );
 }
