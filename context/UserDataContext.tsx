@@ -1,5 +1,5 @@
 import { getTodaysStepsWithProgress } from "@/services/api/dailyStepsService";
-import { getUserDocument } from "@/services/api/userService";
+import { checkAndUnlockAchievements, getUserDocument } from "@/services/api/userService";
 import { User } from "@/services/firebase/collections/user";
 import { createContext, ReactNode, useCallback, useContext, useRef, useState } from "react";
 
@@ -58,7 +58,27 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
                 getTodaysStepsWithProgress(userId),
             ]);
 
-            setUserData(userDoc);
+            if (userDoc) {
+                // Check for new achievements
+                const unlockedIds = await checkAndUnlockAchievements(
+                    userId,
+                    todaySteps.steps,
+                    userDoc.totalSteps,
+                    userDoc.currentStreak
+                );
+
+                if (unlockedIds.length > 0) {
+                    console.log("[UserDataContext] Unlocked achievements:", unlockedIds);
+                    // Re-fetch user doc to get updated achievements and pomes
+                    const updatedUserDoc = await getUserDocument(userId);
+                    setUserData(updatedUserDoc);
+                } else {
+                    setUserData(userDoc);
+                }
+            } else {
+                setUserData(null);
+            }
+
             setStepsData(todaySteps);
             lastFetchTimeRef.current = now;
 
