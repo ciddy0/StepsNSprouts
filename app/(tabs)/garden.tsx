@@ -1,14 +1,30 @@
-import { HamburgerMenu } from '@/components/HamburgerMenu';
-import itemMap from '@/constants/inventoryItems';
-import { useAuth } from '@/context/AuthContext';
-import { useUserData } from '@/context/UserDataContext';
-import { syncTodaysStepsFromHealthKit } from '@/services/api/dailyStepsService';
-import { getUserDocument, placeDecorationInGarden, removeDecorationFromGarden } from '@/services/api/userService';
-import { ensureHealthServiceInitialized } from '@/services/steps';
-import { ALL_DECORATION_SLOTS } from '@/utils/slotHelpers';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ImageBackground, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { HamburgerMenu } from "@/components/HamburgerMenu";
+import itemMap from "@/constants/inventoryItems";
+import { useAuth } from "@/context/AuthContext";
+import { useUserData } from "@/context/UserDataContext";
+import { syncTodaysStepsFromHealthKit } from "@/services/api/dailyStepsService";
+import {
+  getUserDocument,
+  placeDecorationInGarden,
+  removeDecorationFromGarden,
+} from "@/services/api/userService";
+import { ensureHealthServiceInitialized } from "@/services/steps";
+import { ALL_DECORATION_SLOTS } from "@/utils/slotHelpers";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ImageBackground,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 type InventoryItem = {
   decorationId: string;
   instances: {
@@ -29,11 +45,16 @@ export default function GardenScreen() {
   const { user } = useAuth();
   const { userData, stepsData, fetchData } = useUserData();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [placedDecorations, setPlacedDecorations] = useState<PlacedDecoration[]>([]);
+  const [placedDecorations, setPlacedDecorations] = useState<
+    PlacedDecoration[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ x: number; y: number } | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   // Auto-sync interval reference
   const syncIntervalRef = useRef<number | null>(null);
@@ -58,12 +79,12 @@ export default function GardenScreen() {
           setPlacedDecorations(userDoc.garden?.decorations || []);
 
           // Debug logging
-          console.log('User inventory:', userDoc.inventory);
-          console.log('Placed decorations:', userDoc.garden?.decorations);
+          console.log("User inventory:", userDoc.inventory);
+          console.log("Placed decorations:", userDoc.garden?.decorations);
         }
       }
     } catch (error) {
-      console.error('Error fetching garden data:', error);
+      console.error("Error fetching garden data:", error);
     } finally {
       setLoading(false);
     }
@@ -176,12 +197,12 @@ export default function GardenScreen() {
   // Get the appropriate tree image based on stage
   const getTreeImage = (stage: number) => {
     const treeImages = [
-      require('@/assets/maiArt/tree0/tree_stage_0.png'),
-      require('@/assets/maiArt/tree0/tree_stage_1.png'),
-      require('@/assets/maiArt/tree0/tree_stage_2.png'),
-      require('@/assets/maiArt/tree0/tree_stage_3.png'),
-      require('@/assets/maiArt/tree0/tree_stage_4.png'),
-      require('@/assets/maiArt/tree0/tree_stage_5.png'),
+      require("@/assets/maiArt/tree0/tree_stage_0.png"),
+      require("@/assets/maiArt/tree0/tree_stage_1.png"),
+      require("@/assets/maiArt/tree0/tree_stage_2.png"),
+      require("@/assets/maiArt/tree0/tree_stage_3.png"),
+      require("@/assets/maiArt/tree0/tree_stage_4.png"),
+      require("@/assets/maiArt/tree0/tree_stage_5.png"),
     ];
     return treeImages[stage] || treeImages[0];
   };
@@ -189,11 +210,17 @@ export default function GardenScreen() {
   // Calculate progress to next level - now using userData from context
   const getProgressToNextLevel = () => {
     if (!userData) {
-      return { progress: 0, stepsInLevel: 0, stepsNeeded: 10000, isMaxLevel: false };
+      return {
+        progress: 0,
+        stepsInLevel: 0,
+        stepsNeeded: 10000,
+        isMaxLevel: false,
+      };
     }
 
     const treeLevel = userData.garden?.tree?.growthLevel || 0;
-    const totalStepsContributed = userData.garden?.tree?.totalStepsContributed || 0;
+    const totalStepsContributed =
+      userData.garden?.tree?.totalStepsContributed || 0;
     const currentLevelSteps = treeLevel * 10000;
     const nextLevelSteps = (treeLevel + 1) * 10000;
     const stepsInCurrentLevel = totalStepsContributed - currentLevelSteps;
@@ -222,10 +249,8 @@ export default function GardenScreen() {
 
   // NEW CODE - Check if a slot is occupied by finding decoration at coordinates
   const getSlotDecoration = (slotX: number, slotY: number) => {
-    return placedDecorations.find(dec => dec.x === slotX && dec.y === slotY);
+    return placedDecorations.find((dec) => dec.x === slotX && dec.y === slotY);
   };
-
-
 
   // Handle placing decoration
   const handlePlaceDecoration = async (instanceId: string) => {
@@ -234,13 +259,18 @@ export default function GardenScreen() {
     if (!user) return;
 
     try {
-      await placeDecorationInGarden(user.uid, instanceId, selectedSlot.x, selectedSlot.y);
+      await placeDecorationInGarden(
+        user.uid,
+        instanceId,
+        selectedSlot.x,
+        selectedSlot.y
+      );
       await fetchGardenData(); // Refresh data
       setShowInventory(false);
       setSelectedSlot(null);
     } catch (error) {
-      console.error('Error placing decoration:', error);
-      alert('Failed to place decoration');
+      console.error("Error placing decoration:", error);
+      alert("Failed to place decoration");
     }
   };
 
@@ -252,18 +282,22 @@ export default function GardenScreen() {
       await removeDecorationFromGarden(user.uid, instanceId);
       await fetchGardenData(); // Refresh data
     } catch (error) {
-      console.error('Error removing decoration:', error);
-      alert('Failed to remove decoration');
+      console.error("Error removing decoration:", error);
+      alert("Failed to remove decoration");
     }
   };
 
   // Get available instances (not placed in garden)
   const getAvailableInstances = () => {
-    const placedInstanceIds = placedDecorations.map(dec => dec.instanceId);
-    const available: { decorationId: string; instanceId: string; name: string | null }[] = [];
+    const placedInstanceIds = placedDecorations.map((dec) => dec.instanceId);
+    const available: {
+      decorationId: string;
+      instanceId: string;
+      name: string | null;
+    }[] = [];
 
-    inventory.forEach(item => {
-      item.instances.forEach(instance => {
+    inventory.forEach((item) => {
+      item.instances.forEach((instance) => {
         if (!placedInstanceIds.includes(instance.instanceId)) {
           available.push({
             decorationId: item.decorationId,
@@ -274,9 +308,9 @@ export default function GardenScreen() {
       });
     });
 
-    console.log('Available instances:', available);
-    console.log('Total inventory items:', inventory.length);
-    console.log('Placed decorations count:', placedDecorations.length);
+    console.log("Available instances:", available);
+    console.log("Total inventory items:", inventory.length);
+    console.log("Placed decorations count:", placedDecorations.length);
 
     return available;
   };
@@ -285,14 +319,19 @@ export default function GardenScreen() {
   const getDecorationImage = (decorationId: string) => {
     // FIX: Cast itemMap to allow dynamic key access with string type
     const image = (itemMap as Record<string, any>)[decorationId];
-    console.log(`Getting image for decorationId: ${decorationId}`, image ? 'Found' : 'NOT FOUND');
-    return image || require('@/assets/no_image.jpg');
+    console.log(
+      `Getting image for decorationId: ${decorationId}`,
+      image ? "Found" : "NOT FOUND"
+    );
+    return image || require("@/assets/no_image.jpg");
   };
 
   // Get instance info including decorationId
   const getInstanceInfo = (instanceId: string) => {
     for (const item of inventory) {
-      const instance = item.instances.find(inst => inst.instanceId === instanceId);
+      const instance = item.instances.find(
+        (inst) => inst.instanceId === instanceId
+      );
       if (instance) {
         return {
           decorationId: item.decorationId,
@@ -314,7 +353,7 @@ export default function GardenScreen() {
       <HamburgerMenu />
       {/* Blue Sky Background - Upper Half */}
       <ImageBackground
-        source={require('@/assets/blue_background.png')}
+        source={require("@/assets/blue_background.png")}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -323,8 +362,31 @@ export default function GardenScreen() {
           {loading ? (
             <ActivityIndicator size="small" color="#733E39" />
           ) : (
-            <Text style={styles.title}>{userData?.username || 'User'}'s Garden</Text>
+            <Text style={styles.title}>
+              {userData?.username || "User"}'s Garden
+            </Text>
           )}
+        </View>
+
+        {/* Coin and currency */}
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}
+        >
+          <Image
+            source={require("@/assets/pommeCoin.png")}
+            style={{ width: 40, height: 40 }}
+            resizeMode="contain"
+          />
+          <Text
+            style={{
+              marginLeft: 8,
+              fontSize: 20,
+              color: "#733E39",
+              fontFamily: "Pixelify Sans",
+            }}
+          >
+            {userData?.pomes || 0}
+          </Text>
         </View>
 
         {/* Tree positioned at bottom of blue area, extending from grass */}
@@ -343,14 +405,15 @@ export default function GardenScreen() {
                     <View
                       style={[
                         styles.progressBarFill,
-                        { width: `${progressInfo.progress * 100}%` }
+                        { width: `${progressInfo.progress * 100}%` },
                       ]}
                     />
                   </View>
                 </View>
 
                 <Text style={styles.progressText}>
-                  {progressInfo.stepsInLevel.toLocaleString()} / {progressInfo.stepsNeeded.toLocaleString()} steps
+                  {progressInfo.stepsInLevel.toLocaleString()} /{" "}
+                  {progressInfo.stepsNeeded.toLocaleString()} steps
                 </Text>
               </>
             ) : (
@@ -376,7 +439,7 @@ export default function GardenScreen() {
 
       {/* Garden Area with Grass Patch Background - Lower Half */}
       <ImageBackground
-        source={require('@/assets/grass_patch.png')}
+        source={require("@/assets/grass_patch.png")}
         style={styles.gardenArea}
         resizeMode="cover"
       >
@@ -393,7 +456,9 @@ export default function GardenScreen() {
                   return (
                     <TouchableOpacity
                       style={styles.placedDecoration}
-                      onPress={() => handleRemoveDecoration(decoration.instanceId)}
+                      onPress={() =>
+                        handleRemoveDecoration(decoration.instanceId)
+                      }
                     >
                       {instanceInfo && (
                         <Image
@@ -430,7 +495,9 @@ export default function GardenScreen() {
                   return (
                     <TouchableOpacity
                       style={styles.placedDecoration}
-                      onPress={() => handleRemoveDecoration(decoration.instanceId)}
+                      onPress={() =>
+                        handleRemoveDecoration(decoration.instanceId)
+                      }
                     >
                       {instanceInfo && (
                         <Image
@@ -467,7 +534,9 @@ export default function GardenScreen() {
                   return (
                     <TouchableOpacity
                       style={styles.placedDecoration}
-                      onPress={() => handleRemoveDecoration(decoration.instanceId)}
+                      onPress={() =>
+                        handleRemoveDecoration(decoration.instanceId)
+                      }
                     >
                       {instanceInfo && (
                         <Image
@@ -507,7 +576,9 @@ export default function GardenScreen() {
                   return (
                     <TouchableOpacity
                       style={styles.placedDecoration}
-                      onPress={() => handleRemoveDecoration(decoration.instanceId)}
+                      onPress={() =>
+                        handleRemoveDecoration(decoration.instanceId)
+                      }
                     >
                       {instanceInfo && (
                         <Image
@@ -544,7 +615,9 @@ export default function GardenScreen() {
                   return (
                     <TouchableOpacity
                       style={styles.placedDecoration}
-                      onPress={() => handleRemoveDecoration(decoration.instanceId)}
+                      onPress={() =>
+                        handleRemoveDecoration(decoration.instanceId)
+                      }
                     >
                       {instanceInfo && (
                         <Image
@@ -602,7 +675,10 @@ export default function GardenScreen() {
             <ScrollView style={styles.inventoryList}>
               {(() => {
                 const availableItems = getAvailableInstances();
-                console.log('Rendering inventory items, count:', availableItems.length);
+                console.log(
+                  "Rendering inventory items, count:",
+                  availableItems.length
+                );
 
                 if (availableItems.length === 0) {
                   return (
@@ -613,7 +689,11 @@ export default function GardenScreen() {
                 }
 
                 return availableItems.map((item) => {
-                  console.log('Rendering item:', item.decorationId, item.instanceId);
+                  console.log(
+                    "Rendering item:",
+                    item.decorationId,
+                    item.instanceId
+                  );
                   return (
                     <TouchableOpacity
                       key={item.instanceId}
@@ -650,100 +730,100 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   titleContainer: {
-    backgroundColor: '#EAD4AA',
+    backgroundColor: "#EAD4AA",
     borderRadius: 10,
     padding: 10,
-    alignItems: 'center',
+    alignItems: "center",
     minHeight: 68,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
-    fontFamily: 'Pixelify Sans',
+    fontFamily: "Pixelify Sans",
     fontSize: 48,
-    fontWeight: '600',
-    color: '#733E39',
+    fontWeight: "600",
+    color: "#733E39",
   },
   treePositioner: {
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    alignItems: "center",
+    justifyContent: "flex-end",
     flex: 1,
     paddingBottom: 0,
     margin: -100,
   },
   growthInfoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 15,
     zIndex: 5,
-    backgroundColor: 'rgba(234, 212, 170, 0.95)',
+    backgroundColor: "rgba(234, 212, 170, 0.95)",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
     minWidth: 200,
   },
   treeStageText: {
-    fontFamily: 'Pixelify Sans',
+    fontFamily: "Pixelify Sans",
     fontSize: 20,
-    fontWeight: '700',
-    color: '#733E39',
+    fontWeight: "700",
+    color: "#733E39",
     marginBottom: 8,
   },
   progressBarContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: 6,
   },
   progressBarBackground: {
     height: 12,
-    backgroundColor: '#D4B896',
+    backgroundColor: "#D4B896",
     borderRadius: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 2,
-    borderColor: '#733E39',
+    borderColor: "#733E39",
   },
   progressBarFill: {
-    height: '100%',
-    backgroundColor: '#7CB342',
+    height: "100%",
+    backgroundColor: "#7CB342",
     borderRadius: 4,
   },
   progressText: {
-    fontFamily: 'Pixelify Sans',
+    fontFamily: "Pixelify Sans",
     fontSize: 14,
-    color: '#733E39',
-    fontWeight: '600',
+    color: "#733E39",
+    fontWeight: "600",
   },
   maxLevelText: {
-    fontFamily: 'Pixelify Sans',
+    fontFamily: "Pixelify Sans",
     fontSize: 16,
-    color: '#733E39',
-    fontWeight: '700',
+    color: "#733E39",
+    fontWeight: "700",
     marginTop: 4,
   },
   gardenArea: {
     flex: 1,
     padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   gardenContent: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    width: '100%',
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    width: "100%",
     flex: 1,
     marginTop: 60,
     paddingTop: 20,
   },
   treeContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 20,
     marginTop: 20,
     zIndex: 10,
   },
   decorationsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    width: "100%",
     zIndex: 1,
   },
   treeImage: {
@@ -751,11 +831,11 @@ const styles = StyleSheet.create({
     height: 150,
   },
   treeLevelText: {
-    fontFamily: 'Pixelify Sans',
+    fontFamily: "Pixelify Sans",
     fontSize: 18,
-    fontWeight: '600',
-    color: '#733E39',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: "600",
+    color: "#733E39",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -775,22 +855,22 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#733E39',
-    borderStyle: 'dashed',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#733E39",
+    borderStyle: "dashed",
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   slotText: {
     fontSize: 40,
-    color: '#733E39',
-    fontWeight: '600',
+    color: "#733E39",
+    fontWeight: "600",
   },
   placedDecoration: {
     width: 80,
     height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   decorationImage: {
     width: 80,
@@ -798,8 +878,8 @@ const styles = StyleSheet.create({
   },
   removeText: {
     fontSize: 10,
-    color: '#733E39',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    color: "#733E39",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
@@ -807,87 +887,87 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: '#EAD4AA',
+    backgroundColor: "#EAD4AA",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
     minHeight: 300,
-    maxHeight: '70%',
+    maxHeight: "70%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   modalTitle: {
-    fontFamily: 'Pixelify Sans',
+    fontFamily: "Pixelify Sans",
     fontSize: 24,
-    fontWeight: '600',
-    color: '#733E39',
+    fontWeight: "600",
+    color: "#733E39",
   },
   closeButton: {
     fontSize: 30,
-    color: '#733E39',
-    fontWeight: '600',
+    color: "#733E39",
+    fontWeight: "600",
   },
   inventoryList: {
     flexGrow: 1,
   },
   inventoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
     borderWidth: 2,
-    borderColor: '#733E39',
+    borderColor: "#733E39",
   },
   inventoryItemImage: {
     width: 50,
     height: 50,
     marginRight: 15,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   inventoryItemText: {
     fontSize: 18,
-    color: '#733E39',
-    fontWeight: '600',
+    color: "#733E39",
+    fontWeight: "600",
   },
   emptyInventoryText: {
-    fontFamily: 'Pixelify Sans',
+    fontFamily: "Pixelify Sans",
     fontSize: 16,
-    color: '#733E39',
-    textAlign: 'center',
+    color: "#733E39",
+    textAlign: "center",
     marginTop: 20,
   },
   // NEW CODE - Updated decorations layout styles
   decorationsContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
     zIndex: 1,
   },
   topRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 15,
   },
   middleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 10,
     marginTop: 0,
   },
   bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 5,
   },
 });
