@@ -216,7 +216,7 @@ export default function ProfileSettingsScreen() {
 
       await updateUserProfile(user.uid, patch);
       Alert.alert("Success", "Your profile was updated.");
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/garden');
     } catch (err: any) {
       Alert.alert("Error", err?.message ?? "Failed to update profile");
     } finally {

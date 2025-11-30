@@ -25,9 +25,8 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-    { title: 'Home', icon: 'house.fill', route: '/(tabs)' },
     { title: 'Garden', icon: 'leaf.fill', route: '/(tabs)/garden' },
-    { title: 'Stats', icon: 'paperplane.fill', route: '/(tabs)/test' },
+    { title: 'Stats', icon: 'paperplane.fill', route: '/(tabs)/stats' },
     { title: 'Settings', icon: 'gearshape.fill', route: '/(tabs)/settings' },
     { title: 'Achievements', icon: 'star.fill', route: '/(tabs)/achievements' },
     { title: 'Shop', icon: 'cart.fill', route: '/(tabs)/shop' },
@@ -108,8 +107,7 @@ export function HamburgerMenu() {
 
                             <View style={styles.menuItems}>
                                 {menuItems.map((item, index) => {
-                                    const isActive = pathname === item.route ||
-                                        (item.route === '/(tabs)' && pathname === '/(tabs)/index');
+                                    const isActive = pathname === item.route;
 
                                     return (
                                         <TouchableOpacity

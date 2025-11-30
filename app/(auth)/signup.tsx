@@ -111,9 +111,9 @@ export default function SignUpScreen() {
       if (soundRef.current) {
         await soundRef.current.stopAsync();
       }
-      router.replace('/(tabs)');
-    } catch (error) {
-      Alert.alert('Google Sign-In Failed', 'Unable to sign in with Google');
+      router.replace('/(tabs)/garden');
+    } catch (error: any) {
+      Alert.alert('Signup Failed', error.message || 'An error occurred during signup');
     } finally {
       setLoading(false);
     }
@@ -124,29 +124,29 @@ export default function SignUpScreen() {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    
+
     if (username.length < 3) {
       Alert.alert('Error', 'Username must be at least 3 characters');
       return;
     }
-    
+
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       Alert.alert('Error', 'Username can only contain letters, numbers, and underscores');
       return;
     }
-    
+
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    
-    if (password.length < 6){
+
+    if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       console.log('Checking username availability...');
       const taken = await isUsernameTaken(username);
@@ -155,19 +155,19 @@ export default function SignUpScreen() {
         setLoading(false);
         return;
       }
-      
+
       console.log('Creating Firebase Auth account...');
       await signUp(email, password, username);
-      
+
       if (soundRef.current) {
         await soundRef.current.stopAsync();
       }
-      
+
       Alert.alert('Success', 'Account created successfully');
       router.replace('/profile-settings');
     } catch (error: any) {
       console.error('Signup error:', error);
-      
+
       let errorMessage = 'An error occurred during signup';
 
       if (error.message === 'Username is already taken') {
@@ -295,13 +295,13 @@ export default function SignUpScreen() {
               />
             </ImageBackground>
 
-           
+
           </ImageBackground>
 
           {/* bottom CTA */}
           <View style={styles.bottomBtns}>
-             {/* Google pill */}
-            <Pressable 
+            {/* Google pill */}
+            <Pressable
               style={{ width: "100%", marginTop: 10 }}
               onPress={() => promptAsync()}
               disabled={!request || loading}
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 90,
     paddingHorizontal: 22,
-    paddingTop: 80,      
+    paddingTop: 80,
     overflow: "visible",
   },
   closeBadge: { position: "absolute", top: -6, right: -4, width: 56, height: 56 },
@@ -377,20 +377,20 @@ const styles = StyleSheet.create({
   },
 
   formArea: {
-  width: "84%",        
-  alignSelf: "center",
-},
+    width: "84%",
+    alignSelf: "center",
+  },
 
   fieldLabel: {
-  width: "100%",
-  fontFamily: "PixelifySans_700",
-  fontSize: 20,
-  color: "#623B2A",
+    width: "100%",
+    fontFamily: "PixelifySans_700",
+    fontSize: 20,
+    color: "#623B2A",
 
 
-  textAlign: "center",
-            
-},
+    textAlign: "center",
+
+  },
   inputWrap: {
     width: "90%",
     height: 54,
@@ -405,14 +405,14 @@ const styles = StyleSheet.create({
     fontFamily: "PixelifySans_700",
     fontSize: 18,
     color: "#3B2A27",
-    textAlign: "center", 
-    width: "75%", 
+    textAlign: "center",
+    width: "75%",
     marginLeft: -50,
   },
 
   googlePill: {
     width: 220,
-    gap:14,
+    gap: 14,
     height: 68,
     alignItems: "center",
     justifyContent: "center",
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#623B2A",
     alignSelf: "flex-start",
-    marginLeft:35,
+    marginLeft: 35,
 
   },
 
@@ -441,10 +441,10 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "web"
       ? { textShadow: "0px 1px 0px #F3D08C" }
       : {
-          textShadowColor: "#F3D08C",
-          textShadowOffset: { width: 0, height: 1 },
-          textShadowRadius: 0,
-        }),
+        textShadowColor: "#F3D08C",
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 0,
+      }),
   },
   altLink: { fontFamily: "PixelifySans_700", fontSize: 16, color: "#623B2A", marginTop: 4 },
 });

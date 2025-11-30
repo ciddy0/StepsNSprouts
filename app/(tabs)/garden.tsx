@@ -1,12 +1,14 @@
 import { HamburgerMenu } from '@/components/HamburgerMenu';
 import itemMap from '@/constants/inventoryItems';
+import { useAuth } from '@/context/AuthContext';
+import { useUserData } from '@/context/UserDataContext';
+import { syncTodaysStepsFromHealthKit } from '@/services/api/dailyStepsService';
 import { getUserDocument, placeDecorationInGarden, removeDecorationFromGarden } from '@/services/api/userService';
-import { auth } from '@/services/firebase/config';
+import { ensureHealthServiceInitialized } from '@/services/steps';
 import { ALL_DECORATION_SLOTS } from '@/utils/slotHelpers';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Image, ImageBackground, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 type InventoryItem = {
   decorationId: string;
   instances: {
@@ -24,14 +26,17 @@ type PlacedDecoration = {
 };
 
 export default function GardenScreen() {
-  const [username, setUsername] = useState('');
-  const [treeLevel, setTreeLevel] = useState(0);
-  const [totalStepsContributed, setTotalStepsContributed] = useState(0);
+  const { user } = useAuth();
+  const { userData, stepsData, fetchData } = useUserData();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [placedDecorations, setPlacedDecorations] = useState<PlacedDecoration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ x: number; y: number } | null>(null);
+
+  // Auto-sync interval reference
+  const syncIntervalRef = useRef<number | null>(null);
 
   // old code with 2 slots
   // Preset locations for decorations (left and right of tree)
@@ -43,48 +48,120 @@ export default function GardenScreen() {
   // NEW CODE - 5 SLOTS
   const decorationSlots = ALL_DECORATION_SLOTS;
 
-
-  const fetchUserData = async () => {
+  // Fetch garden-specific data (inventory and decorations)
+  const fetchGardenData = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const userDoc = await getUserDocument(currentUser.uid);
+      if (user) {
+        const userDoc = await getUserDocument(user.uid);
         if (userDoc) {
-          setUsername(userDoc.username || 'User');
-          setTreeLevel(userDoc.garden?.tree?.growthLevel || 0);
-          setTotalStepsContributed(userDoc.garden?.tree?.totalStepsContributed || 0);
           setInventory(userDoc.inventory || []);
           setPlacedDecorations(userDoc.garden?.decorations || []);
 
           // Debug logging
           console.log('User inventory:', userDoc.inventory);
           console.log('Placed decorations:', userDoc.garden?.decorations);
-        } else {
-          setUsername('User');
-          setTreeLevel(0);
-          setTotalStepsContributed(0);
         }
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      setUsername('User');
-      setTreeLevel(0);
-      setTotalStepsContributed(0);
+      console.error('Error fetching garden data:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Initialize HealthKit on mount
   useEffect(() => {
-    fetchUserData();
+    const initHealthKit = async () => {
+      try {
+        const initialized = await ensureHealthServiceInitialized();
+        if (!initialized) {
+          Alert.alert(
+            "Health Data Unavailable",
+            "Could not initialize health data service. Step tracking may not work properly."
+          );
+        }
+      } catch (error) {
+        console.error("Error initializing HealthKit:", error);
+      }
+    };
+
+    initHealthKit();
   }, []);
 
-  // Refresh garden data whenever the garden tab is focused
+  // Setup auto-sync when user is available
+  useEffect(() => {
+    if (user) {
+      // Initial sync and fetch cached data
+      const doInitialSync = async () => {
+        try {
+          console.log("[GardenScreen] Performing initial sync...");
+          await syncTodaysStepsFromHealthKit(user.uid);
+          // Refresh cached data
+          await fetchData(user.uid, true);
+          // Fetch garden-specific data
+          await fetchGardenData();
+        } catch (err) {
+          console.error("Initial sync failed:", err);
+        }
+      };
+
+      doInitialSync();
+
+      // Setup auto-sync every 15 minutes
+      const intervalId = setInterval(
+        async () => {
+          try {
+            console.log("[GardenScreen] Auto-syncing steps...");
+            await syncTodaysStepsFromHealthKit(user.uid);
+            // Refresh cached data
+            await fetchData(user.uid, true);
+          } catch (err) {
+            console.error("Auto-sync failed:", err);
+          }
+        },
+        15 * 60 * 1000
+      ); // 15 minutes
+
+      syncIntervalRef.current = intervalId;
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
+      }
+    };
+  }, [user, fetchData]);
+
+  // Fetch cached data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      fetchUserData();
-    }, [])
+      if (user) {
+        fetchData(user.uid); // Will use cache if fresh
+        fetchGardenData(); // Refresh garden-specific data
+      }
+    }, [user, fetchData])
   );
+
+  // Pull to refresh
+  const onRefresh = async () => {
+    if (!user) return;
+
+    setRefreshing(true);
+    try {
+      // Force sync steps from HealthKit
+      await syncTodaysStepsFromHealthKit(user.uid);
+      // Force refresh cached data
+      await fetchData(user.uid, true);
+      // Refresh garden data
+      await fetchGardenData();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      Alert.alert("Error", "Failed to refresh data");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Map growth level to one of 6 tree stages (0-5)
   const getTreeStage = (level: number): number => {
@@ -109,8 +186,14 @@ export default function GardenScreen() {
     return treeImages[stage] || treeImages[0];
   };
 
-  // Calculate progress to next level
+  // Calculate progress to next level - now using userData from context
   const getProgressToNextLevel = () => {
+    if (!userData) {
+      return { progress: 0, stepsInLevel: 0, stepsNeeded: 10000, isMaxLevel: false };
+    }
+
+    const treeLevel = userData.garden?.tree?.growthLevel || 0;
+    const totalStepsContributed = userData.garden?.tree?.totalStepsContributed || 0;
     const currentLevelSteps = treeLevel * 10000;
     const nextLevelSteps = (treeLevel + 1) * 10000;
     const stepsInCurrentLevel = totalStepsContributed - currentLevelSteps;
@@ -128,6 +211,7 @@ export default function GardenScreen() {
     };
   };
 
+  const treeLevel = userData?.garden?.tree?.growthLevel || 0;
   const currentTreeStage = getTreeStage(treeLevel);
   const progressInfo = getProgressToNextLevel();
 
@@ -147,12 +231,11 @@ export default function GardenScreen() {
   const handlePlaceDecoration = async (instanceId: string) => {
     if (selectedSlot === null) return;
 
-    const currentUser = auth.currentUser;
-    if (!currentUser) return;
+    if (!user) return;
 
     try {
-      await placeDecorationInGarden(currentUser.uid, instanceId, selectedSlot.x, selectedSlot.y);
-      await fetchUserData(); // Refresh data
+      await placeDecorationInGarden(user.uid, instanceId, selectedSlot.x, selectedSlot.y);
+      await fetchGardenData(); // Refresh data
       setShowInventory(false);
       setSelectedSlot(null);
     } catch (error) {
@@ -163,12 +246,11 @@ export default function GardenScreen() {
 
   // Handle removing decoration
   const handleRemoveDecoration = async (instanceId: string) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return;
+    if (!user) return;
 
     try {
-      await removeDecorationFromGarden(currentUser.uid, instanceId);
-      await fetchUserData(); // Refresh data
+      await removeDecorationFromGarden(user.uid, instanceId);
+      await fetchGardenData(); // Refresh data
     } catch (error) {
       console.error('Error removing decoration:', error);
       alert('Failed to remove decoration');
@@ -222,7 +304,13 @@ export default function GardenScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ flexGrow: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <HamburgerMenu />
       {/* Blue Sky Background - Upper Half */}
       <ImageBackground
@@ -235,7 +323,7 @@ export default function GardenScreen() {
           {loading ? (
             <ActivityIndicator size="small" color="#733E39" />
           ) : (
-            <Text style={styles.title}>{username}'s Garden</Text>
+            <Text style={styles.title}>{userData?.username || 'User'}'s Garden</Text>
           )}
         </View>
 
@@ -543,7 +631,7 @@ export default function GardenScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 

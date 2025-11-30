@@ -65,7 +65,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
-  
+
   const { signIn } = useAuth();
   const [request, response, promptAsync] = useGoogleAuth();
 
@@ -108,7 +108,7 @@ export default function LoginScreen() {
       if (soundRef.current) {
         await soundRef.current.stopAsync();
       }
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/garden');
     } catch (error) {
       Alert.alert('Google Sign-In Failed', 'Unable to sign in with Google');
     } finally {
@@ -129,7 +129,7 @@ export default function LoginScreen() {
       if (soundRef.current) {
         await soundRef.current.stopAsync();
       }
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/garden');
     } catch (error: any) {
       Alert.alert('Login Failed', 'Invalid email or password');
     } finally {
@@ -147,19 +147,19 @@ export default function LoginScreen() {
       >
         <View style={styles.center}>
           {/* PANEL */}
-          <ImageBackground 
-            source={A.panel} 
-            resizeMode="contain" 
-            style={styles.panel} 
+          <ImageBackground
+            source={A.panel}
+            resizeMode="contain"
+            style={styles.panel}
             imageStyle={pixelArtWebOnly}
           >
             <Image source={A.close} resizeMode="contain" style={styles.closeBadge} />
 
             {/* Title pill */}
-            <ImageBackground 
-              source={A.longbutton} 
-              resizeMode="stretch" 
-              style={styles.titlePill} 
+            <ImageBackground
+              source={A.longbutton}
+              resizeMode="stretch"
+              style={styles.titlePill}
               imageStyle={pixelArtWebOnly}
             >
               <Text style={styles.panelTitle}>login</Text>
@@ -167,10 +167,10 @@ export default function LoginScreen() {
 
             <View style={styles.formArea}>
               <Text style={styles.fieldLabel}>email</Text>
-              <ImageBackground 
-                source={A.longbutton} 
-                resizeMode="stretch" 
-                style={styles.inputWrap} 
+              <ImageBackground
+                source={A.longbutton}
+                resizeMode="stretch"
+                style={styles.inputWrap}
                 imageStyle={pixelArtWebOnly}
               >
                 <TextInput
@@ -186,10 +186,10 @@ export default function LoginScreen() {
               </ImageBackground>
 
               <Text style={[styles.fieldLabel, { marginTop: 10 }]}>password</Text>
-              <ImageBackground 
-                source={A.longbutton} 
-                resizeMode="stretch" 
-                style={styles.inputWrap} 
+              <ImageBackground
+                source={A.longbutton}
+                resizeMode="stretch"
+                style={styles.inputWrap}
                 imageStyle={pixelArtWebOnly}
               >
                 <TextInput
@@ -213,14 +213,14 @@ export default function LoginScreen() {
           {/* bottom CTAs */}
           <View style={styles.bottomBtns}>
             {/* Google Sign-In Button */}
-            <Pressable 
-              onPress={() => promptAsync()} 
+            <Pressable
+              onPress={() => promptAsync()}
               disabled={!request || loading}
             >
-              <ImageBackground 
-                source={A.greylongbutton} 
-                resizeMode="stretch" 
-                style={styles.googlePill} 
+              <ImageBackground
+                source={A.greylongbutton}
+                resizeMode="stretch"
+                style={styles.googlePill}
                 imageStyle={pixelArtWebOnly}
               >
                 <Image source={A.gLogo} style={styles.gLogo} resizeMode="contain" />
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 90,
     paddingHorizontal: 22,
-    paddingTop: 80,      
+    paddingTop: 80,
     overflow: "visible",
   },
   closeBadge: { position: "absolute", top: -6, right: -4, width: 56, height: 56 },
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
 
   formArea: {
-    width: "84%",        
+    width: "84%",
     alignSelf: "center",
   },
 
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     color: "#623B2A",
     textAlign: "center",
   },
-  
+
   inputWrap: {
     width: "90%",
     height: 54,
@@ -311,13 +311,13 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginLeft: 40,
   },
-  
+
   input: {
     fontFamily: "PixelifySans_700",
     fontSize: 18,
     color: "#3B2A27",
-    textAlign: "center", 
-    width: "75%", 
+    textAlign: "center",
+    width: "75%",
     marginLeft: -50,
   },
 
@@ -349,10 +349,10 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "web"
       ? { textShadow: "0px 1px 0px #F3D08C" }
       : {
-          textShadowColor: "#F3D08C",
-          textShadowOffset: { width: 0, height: 1 },
-          textShadowRadius: 0,
-        }),
+        textShadowColor: "#F3D08C",
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 0,
+      }),
   },
   altLink: { fontFamily: "PixelifySans_700", fontSize: 16, color: "#623B2A", marginTop: 4 },
 });

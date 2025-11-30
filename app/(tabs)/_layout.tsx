@@ -12,7 +12,6 @@ export default function TabLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="index" />
       <Stack.Screen name="garden" />
       <Stack.Screen name="test" />
       <Stack.Screen name="settings" />
