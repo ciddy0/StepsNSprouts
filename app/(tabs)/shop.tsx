@@ -16,6 +16,7 @@ export default function ShopScreen() {
 
   const [award, setAward] = useState<{ decorationId: string; instanceId: string } | null>(null);
   const [newBalance, setNewBalance] = useState<number | null>(null);
+  const [wasPlacedInGarden, setWasPlacedInGarden] = useState<boolean>(false);
 
   const box = useMemo(() => SHOP_ITEMS.find(x => x.type === "lootbox" && x.id === "lootbox"), []);
 
@@ -38,11 +39,17 @@ export default function ShopScreen() {
 
       setAward(res.award);
       setNewBalance(res.newBalance);
+      setWasPlacedInGarden(res.wasPlacedInGarden);
+
+      const placementMessage = res.wasPlacedInGarden
+        ? "✨ Item placed randomly in your garden!"
+        : "📦 Item added to inventory (no empty garden slots)";
 
       setLog(
         [
           `Purchased: ${box.name} (price: ${res.price} pomes)`,
           `Award: ${res.award.decorationId} (instance: ${res.award.instanceId})`,
+          placementMessage,
           `New balance: ${res.newBalance}`
         ].join("\n")
       );
