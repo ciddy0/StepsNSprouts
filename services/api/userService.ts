@@ -1,3 +1,4 @@
+import { ACHIEVEMENTS } from "@/constants/achievements";
 import { ALL_DECORATION_SLOTS, getRandomEmptySlot as getRandomEmptySlotHelper } from "@/utils/slotHelpers";
 import { User as FirebaseUser } from "firebase/auth";
 import {
@@ -28,14 +29,14 @@ export async function isUsernameTaken(username: string): Promise<boolean> {
  * Initialize new user with default values
  */
 export async function initializeNewUser(
-  firebaseUser: FirebaseUser, 
+  firebaseUser: FirebaseUser,
   username: string
 ): Promise<void> {
   const userId = firebaseUser.uid;
-  
+
   const userRef = doc(db, "users", userId);
   const docSnap = await getDoc(userRef);
-  
+
   if (docSnap.exists()) {
     console.log("User already initialized");
     return;
@@ -48,7 +49,7 @@ export async function initializeNewUser(
   }
 
   const now = new Date().toISOString();
-  
+
   const newUser: User = {
     id: userId,
     email: firebaseUser.email || "",
@@ -103,7 +104,7 @@ export async function getUserDocument(userId: string): Promise<User | null> {
  * Update user profile fields
  */
 export async function updateUserProfile(
-  userId: string, 
+  userId: string,
   updates: Partial<User>
 ): Promise<void> {
   const userRef = doc(db, "users", userId);
@@ -117,15 +118,15 @@ export async function updateUserProfile(
  * Update user's pomes (currency)
  */
 export async function updateUserPomes(
-  userId: string, 
+  userId: string,
   amount: number
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const newAmount = user.pomes + amount;
   if (newAmount < 0) throw new Error("Insufficient pomes");
-  
+
   await updateUserProfile(userId, { pomes: newAmount });
 }
 
@@ -133,18 +134,18 @@ export async function updateUserPomes(
  * Update user's garden
  */
 export async function updateUserGarden(
-  userId: string, 
+  userId: string,
   gardenUpdates: Partial<User["garden"]>
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const updatedGarden = {
     ...user.garden,
     ...gardenUpdates,
     lastModified: new Date().toISOString()
   };
-  
+
   await updateUserProfile(userId, { garden: updatedGarden });
 }
 // ---------------------------------------------------------------------------------------------
@@ -165,29 +166,29 @@ export async function placeDecorationInGarden(
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   // Check if instance exists in inventory (skip if this is from auto-placement after purchase)
   if (!skipInventoryCheck) {
-    const hasInstance = user.inventory.some(item => 
+    const hasInstance = user.inventory.some(item =>
       item.instances.some(inst => inst.instanceId === instanceId)
     );
     if (!hasInstance) throw new Error("Decoration not found in inventory");
   }
-  
+
   // Check if already placed
   const alreadyPlaced = user.garden.decorations.some(
     dec => dec.instanceId === instanceId
   );
   if (alreadyPlaced) throw new Error("Decoration already placed");
-  
+
   // Check max decorations
   if (user.garden.decorations.length >= user.garden.maxDecorations) {
     throw new Error("Maximum decorations reached");
   }
-  
+
   let finalX = x;
   let finalY = y;
-  
+
   // RANDOMIZED PLACEMENT - NEW CODE
   if (randomSlot) {
     console.log("🎲 Attempting random placement...");
@@ -202,19 +203,19 @@ export async function placeDecorationInGarden(
     finalY = emptySlot.y;
     console.log("✅ Random slot selected:", { x: finalX, y: finalY });
   }
-  
+
   // Validate coordinates are provided
   if (finalX === undefined || finalY === undefined) {
     throw new Error("Coordinates must be provided");
   }
-  
+
   const newDecoration = {
     instanceId,
     x: finalX,
     y: finalY,
     dateAdded: new Date().toISOString()
   };
-  
+
   const updatedDecorations = [...user.garden.decorations, newDecoration];
   await updateUserGarden(userId, { decorations: updatedDecorations });
 }
@@ -230,11 +231,11 @@ export async function removeDecorationFromGarden(
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const updatedDecorations = user.garden.decorations.filter(
     dec => dec.instanceId !== instanceId
   );
-  
+
   await updateUserGarden(userId, { decorations: updatedDecorations });
 }
 
@@ -247,17 +248,17 @@ export async function addDecorationToInventory(
 ): Promise<string> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const instanceId = `inst-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const newInstance = {
     instanceId,
     name: null,
     dateAcquired: new Date().toISOString()
   };
-  
+
   const inventory = [...user.inventory];
   const existingItem = inventory.find(item => item.decorationId === decorationId);
-  
+
   if (existingItem) {
     existingItem.instances.push(newInstance);
   } else {
@@ -266,7 +267,7 @@ export async function addDecorationToInventory(
       instances: [newInstance]
     });
   }
-  
+
   await updateUserProfile(userId, { inventory });
   return instanceId;
 }
@@ -281,10 +282,10 @@ export async function renameDecorationInstance(
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const inventory = [...user.inventory];
   let found = false;
-  
+
   for (const item of inventory) {
     const instance = item.instances.find(inst => inst.instanceId === instanceId);
     if (instance) {
@@ -293,14 +294,14 @@ export async function renameDecorationInstance(
       break;
     }
   }
-  
+
   if (!found) throw new Error("Instance not found");
-  
+
   await updateUserProfile(userId, { inventory });
 }
 
 /**
- * Add achievement to user
+ * Add achievement to user and give reward
  */
 export async function unlockAchievement(
   userId: string,
@@ -308,20 +309,81 @@ export async function unlockAchievement(
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const hasAchievement = user.achievements.some(a => a.achievementId === achievementId);
   if (hasAchievement) {
     console.log("Achievement already unlocked");
     return;
   }
-  
+
+  // Find achievement definition to get reward
+  const achievementDef = ACHIEVEMENTS.find(a => a.id === achievementId);
+  if (!achievementDef) {
+    console.warn(`Achievement definition not found for id: ${achievementId}`);
+    return;
+  }
+
   const newAchievement = {
     achievementId,
     dateAcquired: new Date().toISOString()
   };
-  
+
   const achievements = [...user.achievements, newAchievement];
-  await updateUserProfile(userId, { achievements });
+
+  // Add reward
+  const newPomes = (user.pomes || 0) + achievementDef.reward.pomes;
+
+  await updateUserProfile(userId, { achievements, pomes: newPomes });
+  console.log(`Unlocked achievement ${achievementId} and awarded ${achievementDef.reward.pomes} pomes`);
+}
+
+/**
+ * Check and unlock achievements based on user stats
+ */
+export async function checkAndUnlockAchievements(
+  userId: string,
+  dailySteps: number,
+  totalSteps: number,
+  currentStreak: number
+): Promise<string[]> {
+  const user = await getUserDocument(userId);
+  if (!user) return [];
+
+  const unlockedIds: string[] = [];
+
+  for (const achievement of ACHIEVEMENTS) {
+    // Skip if already unlocked
+    if (user.achievements.some(a => a.achievementId === achievement.id)) {
+      continue;
+    }
+
+    let unlocked = false;
+
+    switch (achievement.requirement.type) {
+      case "daily_steps":
+        if (dailySteps >= achievement.requirement.value) {
+          unlocked = true;
+        }
+        break;
+      case "total_steps":
+        if (totalSteps >= achievement.requirement.value) {
+          unlocked = true;
+        }
+        break;
+      case "streak":
+        if (currentStreak >= achievement.requirement.value) {
+          unlocked = true;
+        }
+        break;
+    }
+
+    if (unlocked) {
+      await unlockAchievement(userId, achievement.id);
+      unlockedIds.push(achievement.id);
+    }
+  }
+
+  return unlockedIds;
 }
 
 /**
@@ -333,14 +395,14 @@ export async function waterTree(
 ): Promise<void> {
   const user = await getUserDocument(userId);
   if (!user) throw new Error("User not found");
-  
+
   const tree = { ...user.garden.tree };
   tree.totalStepsContributed += stepsContributed;
   tree.lastWatered = new Date().toISOString();
-  
+
   // Growth logic: every 10,000 steps = 1 growth level
   tree.growthLevel = Math.floor(tree.totalStepsContributed / 10000);
-  
+
   await updateUserGarden(userId, { tree });
 }
 
