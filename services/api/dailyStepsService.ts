@@ -48,6 +48,12 @@ export async function setDailySteps(
   const existingDaySteps = await getDailySteps(userId, date);
   const previousSteps = existingDaySteps?.steps || 0;
 
+  // Only update if steps have increased (prevents overwriting with lower values during simulation/sync issues)
+  if (steps <= previousSteps) {
+    console.log(`[DailySteps] Skipping update: new steps (${steps}) <= previous steps (${previousSteps})`);
+    return;
+  }
+
   const dailyStepsData: DailySteps = {
     id: date,
     userId,
@@ -214,7 +220,7 @@ export async function getWeeklyStepSummary(userId: string): Promise<{
 
   const recentSteps = await getRecentDailySteps(userId, 7);
 
-  const totalSteps = recentSteps.reduce((sum, day) => sum + day.steps, 0);
+  const totalSteps = recentSteps.reduce((sum, day) => sum + (Number(day.steps) || 0), 0);
   const averageSteps = recentSteps.length > 0 ? Math.floor(totalSteps / recentSteps.length) : 0;
 
   return {
@@ -302,7 +308,7 @@ async function updateTotalSteps(userId: string): Promise<void> {
 
   let totalSteps = 0;
   querySnapshot.forEach(doc => {
-    totalSteps += doc.data().steps || 0;
+    totalSteps += Number(doc.data().steps) || 0;
   });
 
   await updateUserProfile(userId, { totalSteps });
