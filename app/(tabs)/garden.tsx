@@ -351,6 +351,33 @@ export default function GardenScreen() {
       }
     >
       <HamburgerMenu />
+
+      {/* Header Row with Daily Steps (Center) and Currency (Right) */}
+      <View style={styles.headerRow}>
+        {/* Empty spacer for left side to help center daily steps */}
+        <View style={styles.headerSpacer} />
+
+        {/* Daily Steps - Center */}
+        <View style={styles.dailyStepsContainer}>
+          <Text style={styles.dailyStepsLabel}>Today's Steps</Text>
+          <Text style={styles.dailyStepsValue}>
+            {(stepsData?.steps || 0).toLocaleString()}
+          </Text>
+        </View>
+
+        {/* Currency - Right */}
+        <View style={styles.currencyContainer}>
+          <Image
+            source={require("@/assets/pommeCoin.png")}
+            style={styles.coinImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.currencyText}>
+            {userData?.pomes || 0}
+          </Text>
+        </View>
+      </View>
+
       {/* Background */}
       <TouchableOpacity
         activeOpacity={1}
@@ -362,26 +389,6 @@ export default function GardenScreen() {
           style={styles.backgroundImage}
           resizeMode="cover"
         >
-          {/* Coin and currency */}
-          <View
-            style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}
-          >
-            <Image
-              source={require("@/assets/pommeCoin.png")}
-              style={{ width: 40, height: 40 }}
-              resizeMode="contain"
-            />
-            <Text
-              style={{
-                marginLeft: 8,
-                fontSize: 20,
-                color: "#733E39",
-                fontFamily: "Pixelify Sans",
-              }}
-            >
-              {userData?.pomes || 0}
-            </Text>
-          </View>
 
           {/* Tree positioned at bottom of blue area, extending from grass */}
           <View style={styles.treePositioner}>
@@ -971,6 +978,66 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 5,
+  },
+  // Header Row Styles
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 10,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 99,
+  },
+  headerSpacer: {
+    width: 48,
+  },
+  dailyStepsContainer: {
+    alignItems: "center",
+    backgroundColor: "#C28569",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#733E39",
+  },
+  dailyStepsLabel: {
+    fontFamily: "Pixelify Sans",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#733E39",
+    marginBottom: 2,
+  },
+  dailyStepsValue: {
+    fontFamily: "Pixelify Sans",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#733E39",
+  },
+  currencyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#C28569",
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#733E39",
+  },
+  coinImage: {
+    width: 32,
+    height: 32,
+  },
+  currencyText: {
+    marginLeft: 6,
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#733E39",
+    fontFamily: "Pixelify Sans",
   },
   // Tree Info Popup Styles
   popupOverlay: {
