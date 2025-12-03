@@ -25,10 +25,6 @@ const A = {
   bg: require("../../assets/maiArt/backdrop.png"),
   panel: require("../../assets/maiArt/panel_brown.png"),
   longBrown: require("../../assets/maiArt/button_long_brown.png"),
-  yellow: require("../../assets/maiArt/button_yellow.png"),
-  grey: require("../../assets/maiArt/button_grey.png"),
-  close: require("../../assets/maiArt/button_square.png"),
-  ringFrame: require("../../assets/maiArt/button_grey.png"),
   fire: require("../../assets/maiArt/fire.png"),
 };
 
@@ -67,12 +63,7 @@ export default function StatsScreen() {
     const dashOffset = circumference * (1 - progress);
     return (
       <View style={s.ringWrap}>
-        <ImageBackground
-          source={A.ringFrame}
-          resizeMode="stretch"
-          style={[s.ringFrame, { width: size + 20, height: size + 20 }]}
-          imageStyle={pixelArtWebOnly}
-        >
+
           <Svg width={size} height={size}>
             <Circle
               cx={size / 2}
@@ -99,7 +90,6 @@ export default function StatsScreen() {
             <Text style={s.ringValue}>{Math.round(progress * 100)}%</Text>
             <Text style={s.ringCaption}>of goal</Text>
           </View>
-        </ImageBackground>
       </View>
     );
   }
@@ -136,7 +126,7 @@ export default function StatsScreen() {
               style={s.panel}
               imageStyle={pixelArtWebOnly}
             >
-              <Image source={A.close} style={s.closeBadge} resizeMode="contain" />
+
 
               {/* Title */}
               <View style={s.titleContainer}>
@@ -153,31 +143,21 @@ export default function StatsScreen() {
               {/* Content Container */}
               <View style={s.contentContainer}>
                 {/* Today's Steps */}
-                <ImageBackground
-                  source={A.longBrown}
-                  resizeMode="stretch"
-                  style={s.row}
-                  imageStyle={pixelArtWebOnly}
-                >
-                  <View style={s.rowContent}>
-                    <Text style={s.rowLabel}>today</Text>
-                    <Text style={s.rowValue}>{stepsData.steps.toLocaleString()}</Text>
+
+                  <View style={s.statCard}>
+                    <View style={s.rowContent}>
+                      <Text style={s.rowLabel}>today</Text>
+                      <Text style={s.rowValue}>{stepsData.steps}</Text>
+                    </View>
                   </View>
-                </ImageBackground>
 
                 {/* Goal */}
-                <ImageBackground
-                  source={A.longBrown}
-                  resizeMode="stretch"
-                  style={s.row}
-                  imageStyle={pixelArtWebOnly}
-                >
+                <View style={s.statCard}>
                   <View style={s.rowContent}>
                     <Text style={s.rowLabel}>goal</Text>
                     <Text style={s.rowValue}>{stepsData.goal.toLocaleString()}</Text>
                   </View>
-                </ImageBackground>
-
+                </View>
                 {/* Remaining */}
                 {/* <ImageBackground
                   source={A.longBrown}
@@ -194,12 +174,7 @@ export default function StatsScreen() {
                 </ImageBackground> */}
 
                 {/* Current Streak */}
-                <ImageBackground
-                  source={A.longBrown}
-                  resizeMode="stretch"
-                  style={s.row}
-                  imageStyle={pixelArtWebOnly}
-                >
+             <View style={s.statCard}> 
                   <View style={s.rowContent}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                       <Text style={s.rowLabel}>streak</Text>
@@ -211,36 +186,26 @@ export default function StatsScreen() {
                     </View>
                     <Text style={s.rowValue}>{userData?.currentStreak || 0} days</Text>
                   </View>
-                </ImageBackground>
-
+          </View>
                 {/* Longest Streak */}
-                <ImageBackground
-                  source={A.longBrown}
-                  resizeMode="stretch"
-                  style={s.row}
-                  imageStyle={pixelArtWebOnly}
-                >
+<View style={s.statCard}> 
                   <View style={s.rowContent}>
                     <Text style={s.rowLabel}>best streak</Text>
                     <Text style={s.rowValue}>{userData?.longestStreak || 0} days</Text>
                   </View>
-                </ImageBackground>
-
+</View>
                 {/* Total Steps */}
-                <ImageBackground
-                  source={A.longBrown}
-                  resizeMode="stretch"
-                  style={s.row}
-                  imageStyle={pixelArtWebOnly}
-                >
+                <View style={s.statCard}> 
                   <View style={s.rowContent}>
                     <Text style={s.rowLabel}>total steps</Text>
                     <Text style={s.rowValue}>{userData?.totalSteps.toLocaleString() || "0"}</Text>
                   </View>
-                </ImageBackground>
-
+                </View>
                 {/* Progress Ring */}
+
+              <View style={s.statCard}> 
                 <ProgressRing progress={pct} />
+                </View>
               </View>
             </ImageBackground>
           </View>
@@ -278,13 +243,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
-  closeBadge: {
-    position: "absolute",
-    top: -10,
-    right: -8,
-    width: 64,
-    height: 64
-  },
+
   titleContainer: {
     width: "100%",
     alignItems: "center",
@@ -362,4 +321,13 @@ const s = StyleSheet.create({
     color: "#3B2A27",
     marginTop: -2,
   },
+  statCard: {
+  width: "90%",
+  backgroundColor: "#ffe6b3",     // light warm yellow
+  borderWidth: 4,
+  borderColor: "#733e39",
+  borderRadius: 6,
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+},
 });
