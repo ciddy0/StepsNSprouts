@@ -1,4 +1,3 @@
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { usePathname, useRouter } from 'expo-router';
@@ -7,6 +6,7 @@ import {
     Animated,
     Dimensions,
     Image,
+    ImageBackground,
     Modal,
     Pressable,
     StyleSheet,
@@ -20,16 +20,17 @@ const MENU_WIDTH = width * 0.75;
 
 interface MenuItem {
     title: string;
-    icon: string;
+    icon: any;
     route: string;
 }
-
+const buttonBg = require('@/assets/maiArt/button_square.png');
 const menuItems: MenuItem[] = [
-    { title: 'Garden', icon: 'leaf.fill', route: '/(tabs)/garden' },
-    { title: 'Stats', icon: 'paperplane.fill', route: '/(tabs)/stats' },
-    { title: 'Settings', icon: 'gearshape.fill', route: '/(tabs)/settings' },
-    { title: 'Achievements', icon: 'star.fill', route: '/(tabs)/achievements' },
-    { title: 'Shop', icon: 'cart.fill', route: '/(tabs)/shop' },
+    { title: 'garden', icon: require('@/assets/maiArt/tree.png'), route: '/(tabs)/garden' },
+    { title: 'stats', icon: require('@/assets/maiArt/stats.png'), route: '/(tabs)/stats' },
+    { title: 'settings', icon: require('@/assets/maiArt/settings.png'), route: '/(tabs)/settings' },
+    { title: 'achievements', icon: require('@/assets/maiArt/star.png'), route: '/(tabs)/achievements' },
+    { title: 'shop', icon: require('@/assets/chest_frame_1.png'), route: '/(tabs)/shop' },
+    
 ];
 
 export function HamburgerMenu() {
@@ -92,17 +93,23 @@ export function HamburgerMenu() {
                                 styles.menuContainer,
                                 {
                                     transform: [{ translateX: slideAnim }],
-                                    backgroundColor: colors.background,
+                                    backgroundColor: '#ead4aa',
                                 },
                             ]}
                         >
                             <View style={styles.menuHeader}>
-                                <Text style={[styles.menuTitle, { color: colors.text }]}>
-                                    MENU
+                                <Text style={[styles.menuTitle, { color: '#733e39' }]}>
+                                    menu
                                 </Text>
-                                <TouchableOpacity onPress={toggleMenu} style={styles.closeButton}>
-                                    <Text style={[styles.closeX, { color: colors.text }]}>✕</Text>
-                                </TouchableOpacity>
+                               <TouchableOpacity onPress={toggleMenu}>
+                                <ImageBackground
+                                    source={buttonBg}
+                                    style={styles.closeButtonBg}
+                                    resizeMode="contain"
+                                >
+                                    <Text style={styles.closeXText}>x</Text>
+                                </ImageBackground>
+                            </TouchableOpacity>
                             </View>
 
                             <View style={styles.menuItems}>
@@ -120,15 +127,25 @@ export function HamburgerMenu() {
                                             ]}
                                             onPress={() => navigateTo(item.route)}
                                         >
-                                            <IconSymbol
-                                                name={item.icon as any}
-                                                size={24}
-                                                color={isActive ? colors.tint : colors.text}
-                                            />
+                                            <ImageBackground
+                                                source={buttonBg}
+                                                style={styles.iconBackground}
+                                                resizeMode="contain"
+                                            >
+                                                <Image
+                                                    source={item.icon}
+                                                    style={[
+                                                        styles.menuIcon,
+                                                        isActive && { tintColor: colors.tint },
+                                                    ]}
+                                                    resizeMode="contain"
+                                                />
+                                            </ImageBackground>
+
                                             <Text
                                                 style={[
                                                     styles.menuItemText,
-                                                    { color: isActive ? colors.tint : colors.text },
+                                                    { color: isActive ? colors.tint : '#733e39' },
                                                 ]}
                                             >
                                                 {item.title}
@@ -166,8 +183,8 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     hamburgerIcon: {
-        width: 32,
-        height: 32,
+        width: 48,
+        height: 48,
     },
     overlay: {
         flex: 1,
@@ -186,6 +203,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+        borderTopRightRadius: 24,        // rounded “pixel-y” corner
+
     },
     menuHeader: {
         flexDirection: 'row',
@@ -194,12 +213,15 @@ const styles = StyleSheet.create({
         marginBottom: 30,
         paddingBottom: 20,
         borderBottomWidth: 2,
-        borderBottomColor: '#ccc',
+        borderBottomColor: '#623B2A',
+  
+        
     },
     menuTitle: {
         fontSize: 28,
         fontFamily: 'PixelifySans_700',
         letterSpacing: 1,
+        
     },
     closeButton: {
         padding: 4,
@@ -224,5 +246,36 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginLeft: 16,
         fontFamily: 'PixelifySans_400',
+        color: "#623B2A",
     },
+    menuIcon: {
+    width: 28,
+    height: 28,
+
+},
+
+iconBackground: {
+    width: 50,       
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+
+},
+
+closeButtonBg: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+},
+
+closeXText: {
+    fontFamily: 'PixelifySans_700',
+    fontSize: 22,
+    lineHeight: 22,
+    color: '#000',
+    textAlign: 'center',
+    marginTop: -2, 
+},
+
 });
