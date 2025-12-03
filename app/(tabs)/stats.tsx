@@ -323,7 +323,7 @@ const s = StyleSheet.create({
   },
   statCard: {
   width: "90%",
-  backgroundColor: "#ffe6b3",     // light warm yellow
+  backgroundColor: "#ffe6b3",     
   borderWidth: 4,
   borderColor: "#733e39",
   borderRadius: 6,
