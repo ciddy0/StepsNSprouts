@@ -13,7 +13,6 @@ import { ALL_DECORATION_SLOTS } from "@/utils/slotHelpers";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   ImageBackground,
@@ -23,7 +22,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 type InventoryItem = {
   decorationId: string;
@@ -51,6 +50,7 @@ export default function GardenScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [showTreeInfo, setShowTreeInfo] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{
     x: number;
     y: number;
@@ -352,297 +352,266 @@ export default function GardenScreen() {
     >
       <HamburgerMenu />
       {/* Background */}
-      <ImageBackground
-        source={require("@/assets/blank_backdrop.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={() => setShowTreeInfo(true)}
+        style={{ flex: 1 }}
       >
-        {/* Title with Username */}
-        <View style={styles.titleContainer}>
-          {loading ? (
-            <ActivityIndicator size="small" color="#733E39" />
-          ) : (
-            <Text style={styles.title}>
-              {userData?.username || "User"}'s Garden
-            </Text>
-          )}
-        </View>
-
-        {/* Coin and currency */}
-        <View
-          style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}
+        <ImageBackground
+          source={require("@/assets/blank_backdrop.png")}
+          style={styles.backgroundImage}
+          resizeMode="cover"
         >
-          <Image
-            source={require("@/assets/pommeCoin.png")}
-            style={{ width: 40, height: 40 }}
-            resizeMode="contain"
-          />
-          <Text
-            style={{
-              marginLeft: 8,
-              fontSize: 20,
-              color: "#733E39",
-              fontFamily: "Pixelify Sans",
-            }}
+          {/* Coin and currency */}
+          <View
+            style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}
           >
-            {userData?.pomes || 0}
-          </Text>
-        </View>
-
-        {/* Tree positioned at bottom of blue area, extending from grass */}
-        <View style={styles.treePositioner}>
-          {/* Growth Progress Info - Above Tree */}
-          <View style={styles.growthInfoContainer}>
-            <Text style={styles.treeStageText}>
-              Stage {currentTreeStage} / 5
-            </Text>
-
-            {!progressInfo.isMaxLevel ? (
-              <>
-                {/* Progress Bar */}
-                <View style={styles.progressBarContainer}>
-                  <View style={styles.progressBarBackground}>
-                    <View
-                      style={[
-                        styles.progressBarFill,
-                        { width: `${progressInfo.progress * 100}%` },
-                      ]}
-                    />
-                  </View>
-                </View>
-
-                <Text style={styles.progressText}>
-                  {progressInfo.stepsInLevel.toLocaleString()} /{" "}
-                  {progressInfo.stepsNeeded.toLocaleString()} steps
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.maxLevelText}>🌟 Max Level! 🌟</Text>
-            )}
-          </View>
-
-          {/* Tree Container with higher z-index */}
-          <View style={styles.treeContainer}>
             <Image
-              source={getTreeImage(currentTreeStage)}
-              style={[
-                styles.treeImage,
-                currentTreeStage === 0 && { width: 20, height: 20 }, // Seed: much smaller
-                currentTreeStage === 1 && { width: 100, height: 100 }, // Sapling: smaller
-                currentTreeStage >= 2 && { width: 300, height: 300 }, // Tree: much larger
-              ]}
+              source={require("@/assets/pommeCoin.png")}
+              style={{ width: 40, height: 40 }}
               resizeMode="contain"
             />
+            <Text
+              style={{
+                marginLeft: 8,
+                fontSize: 20,
+                color: "#733E39",
+                fontFamily: "Pixelify Sans",
+              }}
+            >
+              {userData?.pomes || 0}
+            </Text>
           </View>
-        </View>
 
-        {/* Garden Area */}
-        <View style={styles.gardenArea}>
-          {/* Decorations Grid - NEW CODE: 3 MIDDLE + 2 BOTTOM SLOTS */}
-          <View style={styles.gardenContent}>
-            {/* Middle Row - Left, Center, Right */}
-            <View style={styles.middleRow}>
-              {/* Left Slot */}
-              <View style={styles.decorationSlot}>
-                {(() => {
-                  const decoration = getSlotDecoration(-1, 0);
-                  if (decoration) {
-                    const instanceInfo = getInstanceInfo(decoration.instanceId);
-                    return (
-                      <TouchableOpacity
-                        style={styles.placedDecoration}
-                        onPress={() =>
-                          handleRemoveDecoration(decoration.instanceId)
-                        }
-                      >
-                        {instanceInfo && (
-                          <Image
-                            source={getDecorationImage(instanceInfo.decorationId)}
-                            style={styles.decorationImage}
-                            resizeMode="contain"
-                          />
-                        )}
-                        <Text style={styles.removeText}>Tap to remove</Text>
-                      </TouchableOpacity>
-                    );
-                  } else {
-                    return (
-                      <TouchableOpacity
-                        style={styles.emptySlot}
-                        onPress={() => {
-                          setSelectedSlot({ x: -1, y: 0 });
-                          setShowInventory(true);
-                        }}
-                      >
-                        <Text style={styles.slotText}>+</Text>
-                      </TouchableOpacity>
-                    );
-                  }
-                })()}
-              </View>
-
-              {/* Center Slot */}
-              <View style={styles.decorationSlot}>
-                {(() => {
-                  const decoration = getSlotDecoration(0, 0);
-                  if (decoration) {
-                    const instanceInfo = getInstanceInfo(decoration.instanceId);
-                    return (
-                      <TouchableOpacity
-                        style={styles.placedDecoration}
-                        onPress={() =>
-                          handleRemoveDecoration(decoration.instanceId)
-                        }
-                      >
-                        {instanceInfo && (
-                          <Image
-                            source={getDecorationImage(instanceInfo.decorationId)}
-                            style={styles.decorationImage}
-                            resizeMode="contain"
-                          />
-                        )}
-                        <Text style={styles.removeText}>Tap to remove</Text>
-                      </TouchableOpacity>
-                    );
-                  } else {
-                    return (
-                      <TouchableOpacity
-                        style={styles.emptySlot}
-                        onPress={() => {
-                          setSelectedSlot({ x: 0, y: 0 });
-                          setShowInventory(true);
-                        }}
-                      >
-                        <Text style={styles.slotText}>+</Text>
-                      </TouchableOpacity>
-                    );
-                  }
-                })()}
-              </View>
-
-              {/* Right Slot */}
-              <View style={styles.decorationSlot}>
-                {(() => {
-                  const decoration = getSlotDecoration(1, 0);
-                  if (decoration) {
-                    const instanceInfo = getInstanceInfo(decoration.instanceId);
-                    return (
-                      <TouchableOpacity
-                        style={styles.placedDecoration}
-                        onPress={() =>
-                          handleRemoveDecoration(decoration.instanceId)
-                        }
-                      >
-                        {instanceInfo && (
-                          <Image
-                            source={getDecorationImage(instanceInfo.decorationId)}
-                            style={styles.decorationImage}
-                            resizeMode="contain"
-                          />
-                        )}
-                        <Text style={styles.removeText}>Tap to remove</Text>
-                      </TouchableOpacity>
-                    );
-                  } else {
-                    return (
-                      <TouchableOpacity
-                        style={styles.emptySlot}
-                        onPress={() => {
-                          setSelectedSlot({ x: 1, y: 0 });
-                          setShowInventory(true);
-                        }}
-                      >
-                        <Text style={styles.slotText}>+</Text>
-                      </TouchableOpacity>
-                    );
-                  }
-                })()}
-              </View>
-            </View>
-
-            {/* Bottom Row - Bottom Left and Bottom Right */}
-            <View style={styles.bottomRow}>
-              {/* Bottom Left Slot */}
-              <View style={styles.decorationSlot}>
-                {(() => {
-                  const decoration = getSlotDecoration(-0.5, 1);
-                  if (decoration) {
-                    const instanceInfo = getInstanceInfo(decoration.instanceId);
-                    return (
-                      <TouchableOpacity
-                        style={styles.placedDecoration}
-                        onPress={() =>
-                          handleRemoveDecoration(decoration.instanceId)
-                        }
-                      >
-                        {instanceInfo && (
-                          <Image
-                            source={getDecorationImage(instanceInfo.decorationId)}
-                            style={styles.decorationImage}
-                            resizeMode="contain"
-                          />
-                        )}
-                        <Text style={styles.removeText}>Tap to remove</Text>
-                      </TouchableOpacity>
-                    );
-                  } else {
-                    return (
-                      <TouchableOpacity
-                        style={styles.emptySlot}
-                        onPress={() => {
-                          setSelectedSlot({ x: -0.5, y: 1 });
-                          setShowInventory(true);
-                        }}
-                      >
-                        <Text style={styles.slotText}>+</Text>
-                      </TouchableOpacity>
-                    );
-                  }
-                })()}
-              </View>
-
-              {/* Bottom Right Slot */}
-              <View style={styles.decorationSlot}>
-                {(() => {
-                  const decoration = getSlotDecoration(0.5, 1);
-                  if (decoration) {
-                    const instanceInfo = getInstanceInfo(decoration.instanceId);
-                    return (
-                      <TouchableOpacity
-                        style={styles.placedDecoration}
-                        onPress={() =>
-                          handleRemoveDecoration(decoration.instanceId)
-                        }
-                      >
-                        {instanceInfo && (
-                          <Image
-                            source={getDecorationImage(instanceInfo.decorationId)}
-                            style={styles.decorationImage}
-                            resizeMode="contain"
-                          />
-                        )}
-                        <Text style={styles.removeText}>Tap to remove</Text>
-                      </TouchableOpacity>
-                    );
-                  } else {
-                    return (
-                      <TouchableOpacity
-                        style={styles.emptySlot}
-                        onPress={() => {
-                          setSelectedSlot({ x: 0.5, y: 1 });
-                          setShowInventory(true);
-                        }}
-                      >
-                        <Text style={styles.slotText}>+</Text>
-                      </TouchableOpacity>
-                    );
-                  }
-                })()}
-              </View>
+          {/* Tree positioned at bottom of blue area, extending from grass */}
+          <View style={styles.treePositioner}>
+            {/* Tree Container with higher z-index */}
+            <View style={[
+              styles.treeContainer,
+              currentTreeStage === 0 && { marginTop: 500 }, // Seed: less margin
+              currentTreeStage === 1 && { marginTop: 450 }, // Sapling: moderate margin
+            ]}>
+              <Image
+                source={getTreeImage(currentTreeStage)}
+                style={[
+                  styles.treeImage,
+                  currentTreeStage === 0 && { width: 20, height: 20 }, // Seed: much smaller
+                  currentTreeStage === 1 && { width: 100, height: 100 }, // Sapling: smaller
+                  currentTreeStage >= 2 && { width: 300, height: 300 }, // Tree: much larger
+                ]}
+                resizeMode="contain"
+              />
             </View>
           </View>
-        </View>
-      </ImageBackground>
+
+          {/* Garden Area */}
+          <View style={styles.gardenArea}>
+            {/* Decorations Grid - NEW CODE: 3 MIDDLE + 2 BOTTOM SLOTS */}
+            <View style={styles.gardenContent}>
+              {/* Middle Row - Left, Center, Right */}
+              <View style={styles.middleRow}>
+                {/* Left Slot */}
+                <View style={styles.decorationSlot}>
+                  {(() => {
+                    const decoration = getSlotDecoration(-1, 0);
+                    if (decoration) {
+                      const instanceInfo = getInstanceInfo(decoration.instanceId);
+                      return (
+                        <TouchableOpacity
+                          style={styles.placedDecoration}
+                          onPress={() =>
+                            handleRemoveDecoration(decoration.instanceId)
+                          }
+                        >
+                          {instanceInfo && (
+                            <Image
+                              source={getDecorationImage(instanceInfo.decorationId)}
+                              style={styles.decorationImage}
+                              resizeMode="contain"
+                            />
+                          )}
+                          <Text style={styles.removeText}>Tap to remove</Text>
+                        </TouchableOpacity>
+                      );
+                    } else {
+                      return (
+                        <TouchableOpacity
+                          style={styles.emptySlot}
+                          onPress={() => {
+                            setSelectedSlot({ x: -1, y: 0 });
+                            setShowInventory(true);
+                          }}
+                        >
+                          <Text style={styles.slotText}>+</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+                  })()}
+                </View>
+
+                {/* Center Slot */}
+                <View style={styles.decorationSlot}>
+                  {(() => {
+                    const decoration = getSlotDecoration(0, 0);
+                    if (decoration) {
+                      const instanceInfo = getInstanceInfo(decoration.instanceId);
+                      return (
+                        <TouchableOpacity
+                          style={styles.placedDecoration}
+                          onPress={() =>
+                            handleRemoveDecoration(decoration.instanceId)
+                          }
+                        >
+                          {instanceInfo && (
+                            <Image
+                              source={getDecorationImage(instanceInfo.decorationId)}
+                              style={styles.decorationImage}
+                              resizeMode="contain"
+                            />
+                          )}
+                          <Text style={styles.removeText}>Tap to remove</Text>
+                        </TouchableOpacity>
+                      );
+                    } else {
+                      return (
+                        <TouchableOpacity
+                          style={styles.emptySlot}
+                          onPress={() => {
+                            setSelectedSlot({ x: 0, y: 0 });
+                            setShowInventory(true);
+                          }}
+                        >
+                          <Text style={styles.slotText}>+</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+                  })()}
+                </View>
+
+                {/* Right Slot */}
+                <View style={styles.decorationSlot}>
+                  {(() => {
+                    const decoration = getSlotDecoration(1, 0);
+                    if (decoration) {
+                      const instanceInfo = getInstanceInfo(decoration.instanceId);
+                      return (
+                        <TouchableOpacity
+                          style={styles.placedDecoration}
+                          onPress={() =>
+                            handleRemoveDecoration(decoration.instanceId)
+                          }
+                        >
+                          {instanceInfo && (
+                            <Image
+                              source={getDecorationImage(instanceInfo.decorationId)}
+                              style={styles.decorationImage}
+                              resizeMode="contain"
+                            />
+                          )}
+                          <Text style={styles.removeText}>Tap to remove</Text>
+                        </TouchableOpacity>
+                      );
+                    } else {
+                      return (
+                        <TouchableOpacity
+                          style={styles.emptySlot}
+                          onPress={() => {
+                            setSelectedSlot({ x: 1, y: 0 });
+                            setShowInventory(true);
+                          }}
+                        >
+                          <Text style={styles.slotText}>+</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+                  })()}
+                </View>
+              </View>
+
+              {/* Bottom Row - Bottom Left and Bottom Right */}
+              <View style={styles.bottomRow}>
+                {/* Bottom Left Slot */}
+                <View style={styles.decorationSlot}>
+                  {(() => {
+                    const decoration = getSlotDecoration(-0.5, 1);
+                    if (decoration) {
+                      const instanceInfo = getInstanceInfo(decoration.instanceId);
+                      return (
+                        <TouchableOpacity
+                          style={styles.placedDecoration}
+                          onPress={() =>
+                            handleRemoveDecoration(decoration.instanceId)
+                          }
+                        >
+                          {instanceInfo && (
+                            <Image
+                              source={getDecorationImage(instanceInfo.decorationId)}
+                              style={styles.decorationImage}
+                              resizeMode="contain"
+                            />
+                          )}
+                          <Text style={styles.removeText}>Tap to remove</Text>
+                        </TouchableOpacity>
+                      );
+                    } else {
+                      return (
+                        <TouchableOpacity
+                          style={styles.emptySlot}
+                          onPress={() => {
+                            setSelectedSlot({ x: -0.5, y: 1 });
+                            setShowInventory(true);
+                          }}
+                        >
+                          <Text style={styles.slotText}>+</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+                  })()}
+                </View>
+
+                {/* Bottom Right Slot */}
+                <View style={styles.decorationSlot}>
+                  {(() => {
+                    const decoration = getSlotDecoration(0.5, 1);
+                    if (decoration) {
+                      const instanceInfo = getInstanceInfo(decoration.instanceId);
+                      return (
+                        <TouchableOpacity
+                          style={styles.placedDecoration}
+                          onPress={() =>
+                            handleRemoveDecoration(decoration.instanceId)
+                          }
+                        >
+                          {instanceInfo && (
+                            <Image
+                              source={getDecorationImage(instanceInfo.decorationId)}
+                              style={styles.decorationImage}
+                              resizeMode="contain"
+                            />
+                          )}
+                          <Text style={styles.removeText}>Tap to remove</Text>
+                        </TouchableOpacity>
+                      );
+                    } else {
+                      return (
+                        <TouchableOpacity
+                          style={styles.emptySlot}
+                          onPress={() => {
+                            setSelectedSlot({ x: 0.5, y: 1 });
+                            setShowInventory(true);
+                          }}
+                        >
+                          <Text style={styles.slotText}>+</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+                  })()}
+                </View>
+              </View>
+            </View>
+          </View>
+        </ImageBackground>
+      </TouchableOpacity>
 
       {/* Inventory Modal */}
       <Modal
@@ -711,6 +680,43 @@ export default function GardenScreen() {
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      {/* Tree Info Popup */}
+      <Modal
+        visible={showTreeInfo}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowTreeInfo(false)}
+      >
+        <TouchableOpacity
+          style={styles.popupOverlay}
+          activeOpacity={1}
+          onPress={() => setShowTreeInfo(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.popupContent}>
+              <Text style={styles.popupTitle}>Tree Info</Text>
+              <View style={styles.popupDivider} />
+              <View style={styles.popupInfoRow}>
+                <Text style={styles.popupLabel}>Stage:</Text>
+                <Text style={styles.popupValue}>{currentTreeStage} / 5</Text>
+              </View>
+              <View style={styles.popupInfoRow}>
+                <Text style={styles.popupLabel}>Total Steps:</Text>
+                <Text style={styles.popupValue}>
+                  {(userData?.garden?.tree?.totalStepsContributed || 0).toLocaleString()}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.popupCloseButton}
+                onPress={() => setShowTreeInfo(false)}
+              >
+                <Text style={styles.popupCloseButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </ScrollView>
   );
@@ -812,7 +818,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
-    marginTop: 20,
+    marginTop: 250,
     zIndex: 10,
   },
   decorationsRow: {
@@ -965,5 +971,72 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 5,
+  },
+  // Tree Info Popup Styles
+  popupOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  popupContent: {
+    backgroundColor: "#EAD4AA",
+    borderRadius: 20,
+    padding: 30,
+    minWidth: 280,
+    borderWidth: 3,
+    borderColor: "#733E39",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  popupTitle: {
+    fontFamily: "Pixelify Sans",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#733E39",
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  popupDivider: {
+    height: 2,
+    backgroundColor: "#733E39",
+    marginBottom: 20,
+    borderRadius: 1,
+  },
+  popupInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  popupLabel: {
+    fontFamily: "Pixelify Sans",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#733E39",
+  },
+  popupValue: {
+    fontFamily: "Pixelify Sans",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#7CB342",
+  },
+  popupCloseButton: {
+    backgroundColor: "#733E39",
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  popupCloseButtonText: {
+    fontFamily: "Pixelify Sans",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#EAD4AA",
   },
 });
