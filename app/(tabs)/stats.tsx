@@ -179,7 +179,7 @@ export default function StatsScreen() {
                 </ImageBackground>
 
                 {/* Remaining */}
-                <ImageBackground
+                {/* <ImageBackground
                   source={A.longBrown}
                   resizeMode="stretch"
                   style={s.row}
@@ -191,7 +191,7 @@ export default function StatsScreen() {
                       {stepsData.remaining.toLocaleString()}
                     </Text>
                   </View>
-                </ImageBackground>
+                </ImageBackground> */}
 
                 {/* Current Streak */}
                 <ImageBackground
