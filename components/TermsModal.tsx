@@ -49,7 +49,7 @@ export default function TermsModal({ visible, onClose }: TermsModalProps) {
                         <ImageBackground
                             source={A.panel}
                             style={styles.panel}
-                            resizeMode="contain"
+                            resizeMode="stretch"
                             imageStyle={pixel}
                         >
                             {/* Close button */}
@@ -73,7 +73,7 @@ export default function TermsModal({ visible, onClose }: TermsModalProps) {
                             <ScrollView
                                 style={styles.scrollContainer}
                                 contentContainerStyle={styles.scrollContent}
-                                showsVerticalScrollIndicator={false}
+                                showsVerticalScrollIndicator={true}
                             >
                                 <Text style={styles.sectionTitle}>Data Collection</Text>
                                 <Text style={styles.paragraph}>
@@ -137,13 +137,16 @@ const styles = StyleSheet.create({
         maxWidth: 440,
         alignItems: "center",
         justifyContent: "center",
+        maxHeight: "90%",
     },
     panel: {
         width: 360,
         height: 640,
         alignItems: "center",
-        paddingTop: 24,
-        paddingHorizontal: 20,
+        justifyContent: "flex-start",
+        paddingTop: 32,
+        paddingBottom: 80,
+        paddingHorizontal: 32,
     },
     closeBadge: {
         position: "absolute",
@@ -167,10 +170,11 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         flex: 1,
-        width: "100%",
+        width: "80%",
     },
     scrollContent: {
-        paddingBottom: 20,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
     },
     sectionTitle: {
         fontFamily: "PixelifySans_700",
