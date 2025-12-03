@@ -1,17 +1,14 @@
-
-
-
 import { PRIVACY_TEXT } from "@/constants/privacy"; // 🔹 uses new constants file
 import React, { useRef } from "react";
 import {
-    Animated,
-    ImageBackground,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  ImageBackground,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 const A = {
@@ -88,15 +85,17 @@ export default function PrivacyModal({ visible, onClose }: PrivacyModalProps) {
             </ScrollView>
 
             {/* close button */}
-            <PressableScale style={styles.modalCloseBtn} onPress={onClose}>
-              <ImageBackground
-                source={A.pillYellow}
-                style={styles.modalClosePill}
-                resizeMode="stretch"
-              >
-                <Text style={styles.modalCloseText}>got it</Text>
-              </ImageBackground>
-            </PressableScale>
+            <View style ={{ width: "100%", alignItems: "center", marginTop: 8 }}>
+              <PressableScale style={styles.modalCloseBtn} onPress={onClose}>
+                <ImageBackground
+                  source={A.pillYellow}
+                  style={styles.modalClosePill}
+                  resizeMode="stretch"
+                >
+                  <Text style={styles.modalCloseText}>got it</Text>
+                </ImageBackground>
+              </PressableScale>
+            </View>
           </ImageBackground>
         </View>
       </Pressable>
@@ -114,12 +113,14 @@ const styles = StyleSheet.create({
   modalContent: {
     alignItems: "center",
     justifyContent: "center",
+    maxHeight: "90%", 
   },
   modalPanel: {
-    width: 340,
-    height: 480,
+    width: 360,
+    height: 640,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    paddingTop: 20,
     paddingVertical: 30,
     paddingHorizontal: 20,
   },
@@ -144,20 +145,23 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontFamily: "PixelifySans_400",
-    fontSize: 16,
+    fontSize: 14,
     color: BROWN,
-    lineHeight: 22,
+    lineHeight: 20,
+    paddingLeft: 40,
+    paddingRight: 40,
   },
   modalCloseBtn: {
-    marginTop: 16,
+    marginTop: 8,
     width: 180,
-    height: 56,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
+    alignSelf: "center",
   },
   modalClosePill: {
-    width: "100%",
-    height: "100%",
+    width: 180,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -166,4 +170,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: BROWN,
   },
+  modalCloseBtnWrapper: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 8,
+  },
+
 });
