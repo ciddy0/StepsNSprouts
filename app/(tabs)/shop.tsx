@@ -7,7 +7,7 @@ import type { User } from '@/services/firebase/collections/user';
 import { db } from '@/services/firebase/config';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Image, ImageBackground, Pressable, ScrollView, Text, View } from "react-native";
 
 export default function ShopScreen() {
   const { user } = useAuth();
@@ -152,22 +152,27 @@ export default function ShopScreen() {
             <View style={{ flex: 1, paddingTop: 80, paddingHorizontal: 40, paddingBottom: 40, }}>
 
               {/* Title */}
-              <View style={{ position: 'absolute', top: -75, alignSelf: 'center' }}>
+              <ImageBackground
+                source={require('@/assets/maiArt/button_long_brown.png')}
+                style={{
+                  position: 'absolute',
+                  top: -5,
+                  alignSelf: 'center',
+                  width: 260,
+                  height: 68,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                resizeMode="stretch"
+              >
                 <Text style={{
                   fontFamily: 'PixelifySans_700',
-                  fontSize: 40,
-                  fontWeight: 'bold',
-                  color: '#fef3c7',
-                  textShadowColor: 'rgba(120, 53, 15, 0.8)',
-                  textShadowOffset: { width: 2, height: 2 },
-                  textShadowRadius: 4,
-                  backgroundColor: 'rgba(103, 43, 8, 0.6)',
-                  borderRadius: 10,
-
+                  fontSize: 28,
+                  color: '#623B2A',
                 }}>
                   SHOP
                 </Text>
-              </View>
+              </ImageBackground>
 
               {/*Balance Display*/}
               {user && (
