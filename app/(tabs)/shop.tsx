@@ -337,11 +337,11 @@ export default function ShopScreen() {
                 {/* Error State */}
                 {status === "error" && (
                   <View style={{
-                    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                    backgroundColor: 'rgba(197, 86, 86, 1)',
                     padding: 16,
                     borderRadius: 8,
-                    borderWidth: 2,
-                    borderColor: '#dc2626',
+                    borderWidth: 4,
+                    borderColor: '#a82222ff',
                     maxWidth: '90%',
                     gap: 12,
                     alignItems: 'center',
