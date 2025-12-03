@@ -178,27 +178,27 @@ export default function ShopScreen() {
               {user && (
                 <View style={{
                   position: 'absolute',
-                  top: -50,
+                  top: -70,
                   right: 2,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 2,
-                  backgroundColor: 'rgba(120, 53, 15, 0.8)',
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 8,
+                  backgroundColor: '#C28569',
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  borderRadius: 12,
                   borderWidth: 2,
-                  borderColor: '#92400e',
+                  borderColor: '#733E39',
                 }}>
                   <Image
                     source={require('@/assets/pommeCoin.png')}
-                    style={{ width: 24, height: 24 }}
+                    style={{ width: 32, height: 32 }}
                     resizeMode="contain"
                   />
                   <Text style={{
-                    fontWeight: 'bold',
-                    color: '#fef3c7',
+                    marginLeft: 6,
                     fontSize: 18,
+                    fontWeight: '700',
+                    color: '#733E39',
                     fontFamily: 'PixelifySans_700',
                   }}>
                     {userBalance}
