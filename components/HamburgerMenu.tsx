@@ -27,10 +27,10 @@ const buttonBg = require('@/assets/maiArt/button_square.png');
 const menuItems: MenuItem[] = [
     { title: 'garden', icon: require('@/assets/maiArt/tree.png'), route: '/(tabs)/garden' },
     { title: 'stats', icon: require('@/assets/maiArt/stats.png'), route: '/(tabs)/stats' },
-    { title: 'settings', icon: require('@/assets/maiArt/settings.png'), route: '/(tabs)/settings' },
     { title: 'achievements', icon: require('@/assets/maiArt/star.png'), route: '/(tabs)/achievements' },
     { title: 'shop', icon: require('@/assets/chest_frame_1.png'), route: '/(tabs)/shop' },
-    
+    { title: 'settings', icon: require('@/assets/maiArt/settings.png'), route: '/(tabs)/settings' },
+
 ];
 
 export function HamburgerMenu() {
@@ -67,7 +67,6 @@ export function HamburgerMenu() {
 
     return (
         <>
-            {/* Floating Hamburger Button */}
             <TouchableOpacity
                 onPress={toggleMenu}
                 style={styles.floatingButton}
@@ -101,15 +100,15 @@ export function HamburgerMenu() {
                                 <Text style={[styles.menuTitle, { color: '#733e39' }]}>
                                     menu
                                 </Text>
-                               <TouchableOpacity onPress={toggleMenu}>
-                                <ImageBackground
-                                    source={buttonBg}
-                                    style={styles.closeButtonBg}
-                                    resizeMode="contain"
-                                >
-                                    <Text style={styles.closeXText}>x</Text>
-                                </ImageBackground>
-                            </TouchableOpacity>
+                                <TouchableOpacity onPress={toggleMenu}>
+                                    <ImageBackground
+                                        source={buttonBg}
+                                        style={styles.closeButtonBg}
+                                        resizeMode="contain"
+                                    >
+                                        <Text style={styles.closeXText}>x</Text>
+                                    </ImageBackground>
+                                </TouchableOpacity>
                             </View>
 
                             <View style={styles.menuItems}>
@@ -203,7 +202,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        borderTopRightRadius: 24,        // rounded “pixel-y” corner
+        borderTopRightRadius: 24,
 
     },
     menuHeader: {
@@ -214,14 +213,13 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         borderBottomWidth: 2,
         borderBottomColor: '#623B2A',
-  
-        
+
+
     },
     menuTitle: {
         fontSize: 28,
         fontFamily: 'PixelifySans_700',
         letterSpacing: 1,
-        
     },
     closeButton: {
         padding: 4,
@@ -249,33 +247,33 @@ const styles = StyleSheet.create({
         color: "#623B2A",
     },
     menuIcon: {
-    width: 28,
-    height: 28,
+        width: 28,
+        height: 28,
 
-},
+    },
 
-iconBackground: {
-    width: 50,       
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
+    iconBackground: {
+        width: 50,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
 
-},
+    },
 
-closeButtonBg: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-},
+    closeButtonBg: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 
-closeXText: {
-    fontFamily: 'PixelifySans_700',
-    fontSize: 22,
-    lineHeight: 22,
-    color: '#000',
-    textAlign: 'center',
-    marginTop: -2, 
-},
+    closeXText: {
+        fontFamily: 'PixelifySans_700',
+        fontSize: 22,
+        lineHeight: 22,
+        color: '#000',
+        textAlign: 'center',
+        marginTop: -2,
+    },
 
 });
