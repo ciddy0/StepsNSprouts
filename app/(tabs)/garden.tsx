@@ -358,15 +358,23 @@ export default function GardenScreen() {
         <View style={styles.headerSpacer} />
 
         {/* Daily Steps - Center */}
-        <View style={styles.dailyStepsContainer}>
+        <ImageBackground
+          source={require("@/assets/maiArt/button_long_brown.png")}
+          style={styles.dailyStepsContainer}
+          resizeMode="stretch"
+        >
           <Text style={styles.dailyStepsLabel}>Today's Steps</Text>
           <Text style={styles.dailyStepsValue}>
             {(stepsData?.steps || 0).toLocaleString()}
           </Text>
-        </View>
+        </ImageBackground>
 
         {/* Currency - Right */}
-        <View style={styles.currencyContainer}>
+        <ImageBackground
+          source={require("@/assets/maiArt/button_long_brown.png")}
+          style={styles.currencyContainer}
+          resizeMode="stretch"
+        >
           <Image
             source={require("@/assets/pommeCoin.png")}
             style={styles.coinImage}
@@ -375,7 +383,7 @@ export default function GardenScreen() {
           <Text style={styles.currencyText}>
             {userData?.pomes || 0}
           </Text>
-        </View>
+        </ImageBackground>
       </View>
 
       {/* Background */}
@@ -998,12 +1006,8 @@ const styles = StyleSheet.create({
   },
   dailyStepsContainer: {
     alignItems: "center",
-    backgroundColor: "#C28569",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#733E39",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   dailyStepsLabel: {
     fontFamily: "Pixelify Sans",
@@ -1021,12 +1025,8 @@ const styles = StyleSheet.create({
   currencyContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#C28569",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#733E39",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   coinImage: {
     width: 32,
