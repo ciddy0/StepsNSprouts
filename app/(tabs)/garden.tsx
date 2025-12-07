@@ -59,13 +59,6 @@ export default function GardenScreen() {
   // Auto-sync interval reference
   const syncIntervalRef = useRef<number | null>(null);
 
-  // old code with 2 slots
-  // Preset locations for decorations (left and right of tree)
-  //const decorationSlots = [
-  //  { x: 0, y: 0, position: 'left' },   // Left slot
-  //  { x: 1, y: 0, position: 'right' },  // Right slot
-  // ];
-
   // NEW CODE - 5 SLOTS
   const decorationSlots = ALL_DECORATION_SLOTS;
 
@@ -219,8 +212,7 @@ export default function GardenScreen() {
     }
 
     const treeLevel = userData.garden?.tree?.growthLevel || 0;
-    const totalStepsContributed =
-      userData.garden?.tree?.totalStepsContributed || 0;
+    const totalStepsContributed = userData.garden?.tree?.totalStepsContributed || 0;
     const currentLevelSteps = treeLevel * 10000;
     const nextLevelSteps = (treeLevel + 1) * 10000;
     const stepsInCurrentLevel = totalStepsContributed - currentLevelSteps;
@@ -242,11 +234,6 @@ export default function GardenScreen() {
   const currentTreeStage = getTreeStage(treeLevel);
   const progressInfo = getProgressToNextLevel();
 
-  // OLD CODE:
-  // const getDecorationInSlot = (slotX: number, slotY: number) => {
-  //   return placedDecorations.find(dec => dec.x === slotX && dec.y === slotY);
-  // };
-
   // NEW CODE - Check if a slot is occupied by finding decoration at coordinates
   const getSlotDecoration = (slotX: number, slotY: number) => {
     return placedDecorations.find((dec) => dec.x === slotX && dec.y === slotY);
@@ -265,7 +252,7 @@ export default function GardenScreen() {
         selectedSlot.x,
         selectedSlot.y
       );
-      await fetchGardenData(); // Refresh data
+      await fetchGardenData();
       setShowInventory(false);
       setSelectedSlot(null);
     } catch (error) {
@@ -280,7 +267,7 @@ export default function GardenScreen() {
 
     try {
       await removeDecorationFromGarden(user.uid, instanceId);
-      await fetchGardenData(); // Refresh data
+      await fetchGardenData();
     } catch (error) {
       console.error("Error removing decoration:", error);
       alert("Failed to remove decoration");
@@ -317,7 +304,6 @@ export default function GardenScreen() {
 
   // Get decoration image from itemMap
   const getDecorationImage = (decorationId: string) => {
-    // FIX: Cast itemMap to allow dynamic key access with string type
     const image = (itemMap as Record<string, any>)[decorationId];
     console.log(
       `Getting image for decorationId: ${decorationId}`,
@@ -351,7 +337,6 @@ export default function GardenScreen() {
       }
     >
       <HamburgerMenu />
-
       {/* Header Row with Daily Steps (Center) and Currency (Right) */}
       <View style={styles.headerRow}>
         {/* Empty spacer for left side to help center daily steps */}
@@ -368,7 +353,6 @@ export default function GardenScreen() {
             {(stepsData?.steps || 0).toLocaleString()}
           </Text>
         </ImageBackground>
-
         {/* Currency - Right */}
         <ImageBackground
           source={require("@/assets/maiArt/button_long_brown.png")}
@@ -385,7 +369,6 @@ export default function GardenScreen() {
           </Text>
         </ImageBackground>
       </View>
-
       {/* Background */}
       <TouchableOpacity
         activeOpacity={1}
@@ -397,7 +380,6 @@ export default function GardenScreen() {
           style={styles.backgroundImage}
           resizeMode="cover"
         >
-
           {/* Tree positioned at bottom of blue area, extending from grass */}
           <View style={styles.treePositioner}>
             {/* Tree Container with higher z-index */}
@@ -463,7 +445,6 @@ export default function GardenScreen() {
                     }
                   })()}
                 </View>
-
                 {/* Center Slot */}
                 <View style={styles.decorationSlot}>
                   {(() => {
@@ -502,7 +483,6 @@ export default function GardenScreen() {
                     }
                   })()}
                 </View>
-
                 {/* Right Slot */}
                 <View style={styles.decorationSlot}>
                   {(() => {
@@ -542,7 +522,6 @@ export default function GardenScreen() {
                   })()}
                 </View>
               </View>
-
               {/* Bottom Row - Bottom Left and Bottom Right */}
               <View style={styles.bottomRow}>
                 {/* Bottom Left Slot */}
@@ -583,7 +562,6 @@ export default function GardenScreen() {
                     }
                   })()}
                 </View>
-
                 {/* Bottom Right Slot */}
                 <View style={styles.decorationSlot}>
                   {(() => {
@@ -627,7 +605,6 @@ export default function GardenScreen() {
           </View>
         </ImageBackground>
       </TouchableOpacity>
-
       {/* Inventory Modal */}
       <Modal
         visible={showInventory}
@@ -651,7 +628,6 @@ export default function GardenScreen() {
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
             </View>
-
             <ScrollView style={styles.inventoryList}>
               {(() => {
                 const availableItems = getAvailableInstances();
@@ -667,7 +643,6 @@ export default function GardenScreen() {
                     </Text>
                   );
                 }
-
                 return availableItems.map((item) => {
                   console.log(
                     "Rendering item:",
@@ -963,7 +938,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
-  // NEW CODE - Updated decorations layout styles
   decorationsContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -987,7 +961,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 5,
   },
-  // Header Row Styles
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1039,7 +1012,6 @@ const styles = StyleSheet.create({
     color: "#733E39",
     fontFamily: "Pixelify Sans",
   },
-  // Tree Info Popup Styles
   popupOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
