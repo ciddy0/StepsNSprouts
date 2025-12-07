@@ -50,7 +50,6 @@ export default function AchievementsScreen() {
                     {/* Placeholder for icon */}
                     <View style={styles.iconPlaceholder} />
                   </View>
-
                   <View style={styles.info}>
                     <Text style={[styles.cardTitle, !isUnlocked && styles.textLocked]}>
                       {achievement.title}
@@ -58,7 +57,6 @@ export default function AchievementsScreen() {
                     <Text style={[styles.cardDesc, !isUnlocked && styles.textLocked]}>
                       {achievement.description}
                     </Text>
-
                     <View style={styles.meta}>
                       <Text style={[styles.reward, !isUnlocked && styles.textLocked]}>
                         🏆 {achievement.reward.pomes} Pomes
@@ -70,7 +68,6 @@ export default function AchievementsScreen() {
                       )}
                     </View>
                   </View>
-
                   {isUnlocked && (
                     <View style={styles.checkMark}>
                       <Text style={{ fontSize: 20 }}>✅</Text>

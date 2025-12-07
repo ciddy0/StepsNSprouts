@@ -51,7 +51,7 @@ export default function StatsScreen() {
     if (!user) return;
 
     setRefreshing(true);
-    await fetchData(user.uid, true); // Force refresh
+    await fetchData(user.uid, true);
     setRefreshing(false);
   };
 
@@ -64,32 +64,32 @@ export default function StatsScreen() {
     return (
       <View style={s.ringWrap}>
 
-          <Svg width={size} height={size}>
-            <Circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              stroke="#d7d7d9"
-              strokeWidth={strokeWidth}
-              fill="none"
-            />
-            <Circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              stroke="#FF746C"
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${circumference} ${circumference}`}
-              strokeDashoffset={dashOffset}
-              strokeLinecap="round"
-              fill="none"
-              transform={`rotate(-90 ${size / 2} ${size / 2})`}
-            />
-          </Svg>
-          <View style={s.ringCenter}>
-            <Text style={s.ringValue}>{Math.round(progress * 100)}%</Text>
-            <Text style={s.ringCaption}>of goal</Text>
-          </View>
+        <Svg width={size} height={size}>
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#d7d7d9"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#FF746C"
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${circumference} ${circumference}`}
+            strokeDashoffset={dashOffset}
+            strokeLinecap="round"
+            fill="none"
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        </Svg>
+        <View style={s.ringCenter}>
+          <Text style={s.ringValue}>{Math.round(progress * 100)}%</Text>
+          <Text style={s.ringCaption}>of goal</Text>
+        </View>
       </View>
     );
   }
@@ -126,8 +126,6 @@ export default function StatsScreen() {
               style={s.panel}
               imageStyle={pixelArtWebOnly}
             >
-
-
               {/* Title */}
               <View style={s.titleContainer}>
                 <ImageBackground
@@ -143,13 +141,12 @@ export default function StatsScreen() {
               {/* Content Container */}
               <View style={s.contentContainer}>
                 {/* Today's Steps */}
-
-                  <View style={s.statCard}>
-                    <View style={s.rowContent}>
-                      <Text style={s.rowLabel}>today</Text>
-                      <Text style={s.rowValue}>{stepsData.steps}</Text>
-                    </View>
+                <View style={s.statCard}>
+                  <View style={s.rowContent}>
+                    <Text style={s.rowLabel}>today</Text>
+                    <Text style={s.rowValue}>{stepsData.steps}</Text>
                   </View>
+                </View>
 
                 {/* Goal */}
                 <View style={s.statCard}>
@@ -158,23 +155,9 @@ export default function StatsScreen() {
                     <Text style={s.rowValue}>{stepsData.goal.toLocaleString()}</Text>
                   </View>
                 </View>
-                {/* Remaining */}
-                {/* <ImageBackground
-                  source={A.longBrown}
-                  resizeMode="stretch"
-                  style={s.row}
-                  imageStyle={pixelArtWebOnly}
-                >
-                  <View style={s.rowContent}>
-                    <Text style={s.rowLabel}>remaining</Text>
-                    <Text style={s.rowValue}>
-                      {stepsData.remaining.toLocaleString()}
-                    </Text>
-                  </View>
-                </ImageBackground> */}
 
                 {/* Current Streak */}
-             <View style={s.statCard}> 
+                <View style={s.statCard}>
                   <View style={s.rowContent}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                       <Text style={s.rowLabel}>streak</Text>
@@ -186,16 +169,16 @@ export default function StatsScreen() {
                     </View>
                     <Text style={s.rowValue}>{userData?.currentStreak || 0} days</Text>
                   </View>
-          </View>
+                </View>
                 {/* Longest Streak */}
-<View style={s.statCard}> 
+                <View style={s.statCard}>
                   <View style={s.rowContent}>
                     <Text style={s.rowLabel}>best streak</Text>
                     <Text style={s.rowValue}>{userData?.longestStreak || 0} days</Text>
                   </View>
-</View>
+                </View>
                 {/* Total Steps */}
-                <View style={s.statCard}> 
+                <View style={s.statCard}>
                   <View style={s.rowContent}>
                     <Text style={s.rowLabel}>total steps</Text>
                     <Text style={s.rowValue}>{userData?.totalSteps.toLocaleString() || "0"}</Text>
@@ -203,8 +186,8 @@ export default function StatsScreen() {
                 </View>
                 {/* Progress Ring */}
 
-              <View style={s.statCard}> 
-                <ProgressRing progress={pct} />
+                <View style={s.statCard}>
+                  <ProgressRing progress={pct} />
                 </View>
               </View>
             </ImageBackground>
@@ -322,12 +305,12 @@ const s = StyleSheet.create({
     marginTop: -2,
   },
   statCard: {
-  width: "90%",
-  backgroundColor: "#ffe6b3",     
-  borderWidth: 4,
-  borderColor: "#733e39",
-  borderRadius: 6,
-  paddingVertical: 8,
-  paddingHorizontal: 12,
-},
+    width: "90%",
+    backgroundColor: "#ffe6b3",
+    borderWidth: 4,
+    borderColor: "#733e39",
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
 });

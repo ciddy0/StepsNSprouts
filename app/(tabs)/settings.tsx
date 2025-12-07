@@ -104,19 +104,18 @@ export default function Settings() {
     router.back();
   };
 
-  // new -------------------------------------------------
   const handleOpenPrivacy = () => {
     setShowPrivacyModal(true);
   }
-  // new -------------------------------------------------
+
   const handleClosePrivacy = () => {
     setShowPrivacyModal(false);
   }
-  // new -------------------------------------------------
+
   const handleOpenTerms = () => {
     setShowTermsModal(true);
   }
-  // new -------------------------------------------------
+
   const handleCloseTerms = () => {
     setShowTermsModal(false);
   }
@@ -144,7 +143,6 @@ export default function Settings() {
             <Link href="/profile-settings" asChild>
               <PressableScale><Row icon={A.icoProfile} text="edit profile" /></PressableScale>
             </Link>
-            {/* New ------------------------------------------------- */}
 
             <PressableScale onPress={handleOpenPrivacy}>
               <Row icon={A.icoPrivacy} text="privacy" />
@@ -161,7 +159,6 @@ export default function Settings() {
           </ImageBackground>
         </View>
       </ImageBackground>
-      {/* New ------------------------------------------------- */}
       <PrivacyModal visible={showPrivacy} onClose={handleClosePrivacy} />
       <TermsModal visible={showTerms} onClose={handleCloseTerms} />
     </View>

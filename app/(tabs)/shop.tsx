@@ -68,8 +68,8 @@ export default function ShopScreen() {
       setUserBalance(res.newBalance);
 
       const placementMessage = res.wasPlacedInGarden
-        ? "✨ Item placed randomly in your garden!"
-        : "📦 Item added to inventory (no empty garden slots)";
+        ? "Item placed randomly in your garden!"
+        : "Item added to inventory (no empty garden slots)";
 
       setLog(
         [
@@ -433,7 +433,7 @@ export default function ShopScreen() {
                   fontFamily: 'PixelifySans_700',
                   top: 20,
                 }}>
-                  🎉 You Got!
+                  You Got!
                 </Text>
 
                 {/* Award Display */}
@@ -471,8 +471,8 @@ export default function ShopScreen() {
                   textAlign: 'center',
                 }}>
                   {wasPlacedInGarden
-                    ? "✨ Placed in your garden!"
-                    : "📦 Added to inventory"}
+                    ? "Placed in your garden!"
+                    : "Added to inventory"}
                 </Text>
 
                 {/* New Balance */}
