@@ -1,7 +1,8 @@
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Audio } from 'expo-av';
 import { usePathname, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -40,8 +41,26 @@ export function HamburgerMenu() {
     const pathname = usePathname();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
+    const clickSoundRef = useRef<Audio.Sound | null>(null);
 
+    const playClickSound = async () => {
+        try {
+            if (clickSoundRef.current) {
+                await clickSoundRef.current.stopAsync();
+                await clickSoundRef.current.unloadAsync();
+            }
+
+            const { sound } = await Audio.Sound.createAsync(
+                require("../assets/music/menu-button-click.mp3"),
+                { shouldPlay: true, volume: 1 }
+            );
+            clickSoundRef.current = sound;
+        } catch (error) {
+            console.log("Error playing click sound", error);
+        }
+    };
     const toggleMenu = () => {
+        playClickSound();
         if (isOpen) {
             Animated.timing(slideAnim, {
                 toValue: -MENU_WIDTH,
@@ -59,6 +78,7 @@ export function HamburgerMenu() {
     };
 
     const navigateTo = (route: string) => {
+        playClickSound();
         toggleMenu();
         setTimeout(() => {
             router.push(route as any);

@@ -9,8 +9,8 @@ import {
   removeDecorationFromGarden,
 } from "@/services/api/userService";
 import { ensureHealthServiceInitialized } from "@/services/steps";
-import { ALL_DECORATION_SLOTS } from "@/utils/slotHelpers";
 import { useFocusEffect } from "@react-navigation/native";
+import { Audio } from 'expo-av';
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -55,12 +55,39 @@ export default function GardenScreen() {
     x: number;
     y: number;
   } | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  useEffect(() => {
+    const setupAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+
+        // Now play the music
+        const { sound } = await Audio.Sound.createAsync(
+          require("../../assets/music/game-audio.mp3"),
+          { shouldPlay: true, isLooping: true, volume: 0.2 }
+        );
+        soundRef.current = sound;
+      } catch (error) {
+        console.log("Error Loading Music", error);
+      }
+    };
+
+    setupAudio();
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.stopAsync();
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
 
   // Auto-sync interval reference
   const syncIntervalRef = useRef<number | null>(null);
-
-  // NEW CODE - 5 SLOTS
-  const decorationSlots = ALL_DECORATION_SLOTS;
 
   // Fetch garden-specific data (inventory and decorations)
   const fetchGardenData = async () => {
@@ -232,7 +259,6 @@ export default function GardenScreen() {
 
   const treeLevel = userData?.garden?.tree?.growthLevel || 0;
   const currentTreeStage = getTreeStage(treeLevel);
-  const progressInfo = getProgressToNextLevel();
 
   // NEW CODE - Check if a slot is occupied by finding decoration at coordinates
   const getSlotDecoration = (slotX: number, slotY: number) => {

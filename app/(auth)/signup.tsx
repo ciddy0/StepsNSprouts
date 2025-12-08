@@ -67,35 +67,39 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
 
   const { signUp } = useAuth();
   const [request, response, promptAsync] = useGoogleAuth();
-
-  // Play background music when component mounts
-  useEffect(() => {
-    const playBackgroundMusic = async () => {
-      try {
-        const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/music/lofi-background-music-326931.mp3'),
-          { shouldPlay: true, isLooping: true, volume: 0.3 }
-        );
-        soundRef.current = sound;
-      } catch (error) {
-        console.log('Error loading music:', error);
+  const clickSoundRef = useRef<Audio.Sound | null>(null);
+  // Helper function to stop all currently playing audio
+  const stopAllAudio = async () => {
+    try {
+      const status = await Audio.Sound.createAsync(
+        require('../../assets/music/lofi-background-music-326931.mp3')
+      );
+      // This is a workaround - we'll just unload all sounds
+      await Audio.setIsEnabledAsync(false);
+      await Audio.setIsEnabledAsync(true);
+    } catch (error) {
+      console.log('Error stopping audio:', error);
+    }
+  };
+  const playClickSound = async () => {
+    try {
+      if (clickSoundRef.current) {
+        await clickSoundRef.current.stopAsync();
+        await clickSoundRef.current.unloadAsync();
       }
-    };
 
-    playBackgroundMusic();
-
-    return () => {
-      if (soundRef.current) {
-        soundRef.current.stopAsync();
-        soundRef.current.unloadAsync();
-      }
-    };
-  }, []);
-
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/music/menu-button-click.mp3"),
+        { shouldPlay: true, volume: 1 }
+      );
+      clickSoundRef.current = sound;
+    } catch (error) {
+      console.log("Error playing click sound", error);
+    }
+  };
   // Handle Google Sign-In response
   useEffect(() => {
     if (response?.type === 'success') {
@@ -107,10 +111,9 @@ export default function SignUpScreen() {
   const handleGoogleSignIn = async (idToken: string) => {
     setLoading(true);
     try {
+      await playClickSound();
       await signInWithGoogleIdToken(idToken);
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-      }
+      await stopAllAudio();
       router.replace('/(tabs)/garden');
     } catch (error: any) {
       Alert.alert('Signup Failed', error.message || 'An error occurred during signup');
@@ -157,13 +160,11 @@ export default function SignUpScreen() {
       }
 
       console.log('Creating Firebase Auth account...');
+      await playClickSound();
       await signUp(email, password, username);
 
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-      }
-
       Alert.alert('Success', 'Account created successfully');
+      await stopAllAudio();
       router.replace('/profile-settings');
     } catch (error: any) {
       console.error('Signup error:', error);

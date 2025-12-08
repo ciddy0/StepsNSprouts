@@ -64,34 +64,11 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
 
   const { signIn } = useAuth();
   const [request, response, promptAsync] = useGoogleAuth();
+  const clickSoundRef = useRef<Audio.Sound | null>(null);
 
-  // Play background music when component mounts
-  useEffect(() => {
-    const playBackgroundMusic = async () => {
-      try {
-        const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/music/lofi-background-music-326931.mp3'),
-          { shouldPlay: true, isLooping: true, volume: 0.3 }
-        );
-        soundRef.current = sound;
-      } catch (error) {
-        console.log('Error loading music:', error);
-      }
-    };
-
-    playBackgroundMusic();
-
-    return () => {
-      if (soundRef.current) {
-        soundRef.current.stopAsync();
-        soundRef.current.unloadAsync();
-      }
-    };
-  }, []);
 
   // Handle Google sign-in response
   useEffect(() => {
@@ -104,10 +81,9 @@ export default function LoginScreen() {
   const handleGoogleSignIn = async (idToken: string) => {
     setLoading(true);
     try {
+      await playClickSound();
       await signInWithGoogleIdToken(idToken);
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-      }
+      await stopAllAudio();
       router.replace('/(tabs)/garden');
     } catch (error) {
       Alert.alert('Google Sign-In Failed', 'Unable to sign in with Google');
@@ -125,10 +101,9 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
+      await playClickSound();
       await signIn(email, password);
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-      }
+      await stopAllAudio();
       router.replace('/(tabs)/garden');
     } catch (error: any) {
       Alert.alert('Login Failed', 'Invalid email or password');
@@ -136,7 +111,36 @@ export default function LoginScreen() {
       setLoading(false);
     }
   };
+  // Helper function to stop all currently playing audio
+  const stopAllAudio = async () => {
+    try {
+      const status = await Audio.Sound.createAsync(
+        require('../../assets/music/lofi-background-music-326931.mp3')
+      );
+      // This is a workaround - we'll just unload all sounds
+      await Audio.setIsEnabledAsync(false);
+      await Audio.setIsEnabledAsync(true);
+    } catch (error) {
+      console.log('Error stopping audio:', error);
+    }
+  };
 
+  const playClickSound = async () => {
+    try {
+      if (clickSoundRef.current) {
+        await clickSoundRef.current.stopAsync();
+        await clickSoundRef.current.unloadAsync();
+      }
+
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/music/menu-button-click.mp3"),
+        { shouldPlay: true, volume: 1 }
+      );
+      clickSoundRef.current = sound;
+    } catch (error) {
+      console.log("Error playing click sound", error);
+    }
+  };
   return (
     <View style={styles.screen}>
       <ImageBackground

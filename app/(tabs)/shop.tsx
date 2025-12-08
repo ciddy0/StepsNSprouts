@@ -5,8 +5,9 @@ import { useAuth } from "@/context/AuthContext";
 import { buyMysteryBox } from "@/services/api/lootService";
 import type { User } from '@/services/firebase/collections/user';
 import { db } from '@/services/firebase/config';
+import { Audio } from 'expo-av';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Image, ImageBackground, Pressable, ScrollView, Text, View } from "react-native";
 
 export default function ShopScreen() {
@@ -22,6 +23,24 @@ export default function ShopScreen() {
   const [wasPlacedInGarden, setWasPlacedInGarden] = useState<boolean>(false);
 
   const box = useMemo(() => SHOP_ITEMS.find(x => x.type === "lootbox" && x.id === "lootbox"), []);
+  const chestOpenSoundRef = useRef<Audio.Sound | null>(null);
+
+  const playClickSound = async () => {
+    try {
+      if (chestOpenSoundRef.current) {
+        await chestOpenSoundRef.current.stopAsync();
+        await chestOpenSoundRef.current.unloadAsync();
+      }
+
+      const { sound } = await Audio.Sound.createAsync(
+        require("@/assets/music/loot-box.mp3"),
+        { shouldPlay: true, volume: 1 }
+      );
+      chestOpenSoundRef.current = sound;
+    } catch (error) {
+      console.log("Error playing click sound", error);
+    }
+  };
 
   // Real-time pommes balance listener from Firestore
   useEffect(() => {
@@ -56,6 +75,7 @@ export default function ShopScreen() {
     }
 
     try {
+      playClickSound();
       setStatus("loading");
       setLog("");
       const res = await buyMysteryBox(user.uid);

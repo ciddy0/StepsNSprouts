@@ -6,6 +6,7 @@ import {
   updateUserProfile,
 } from "@/services/firebase/userProfile";
 import calculateDailySteps from "@/services/steps/stepGoalCalculator";
+import { Audio } from "expo-av";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -24,7 +25,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-
 const A = {
   bg: require("../assets/maiArt/backdrop.png"),
   panel: require("../assets/maiArt/panel_brown.png"),
@@ -151,6 +151,24 @@ export default function ProfileSettingsScreen() {
   // Avatar picker modal state
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
+  const clickSoundRef = useRef<Audio.Sound | null>(null);
+  const playClickSound = async () => {
+    try {
+      if (clickSoundRef.current) {
+        await clickSoundRef.current.stopAsync();
+        await clickSoundRef.current.unloadAsync();
+      }
+
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/music/menu-button-click.mp3"),
+        { shouldPlay: true, volume: 1 }
+      );
+      clickSoundRef.current = sound;
+    } catch (error) {
+      console.log("Error playing click sound", error);
+    }
+  };
+
   // Load user profile on mount or when user changes
   useEffect(() => {
     const load = async () => {
@@ -197,6 +215,7 @@ export default function ProfileSettingsScreen() {
     return 10000;
   };
   const onSave = async () => {
+    playClickSound();
     if (!user) return;
     try {
       setSaving(true);
@@ -225,6 +244,7 @@ export default function ProfileSettingsScreen() {
   };
 
   const handleSignOut = async () => {
+    playClickSound();
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -243,10 +263,12 @@ export default function ProfileSettingsScreen() {
   };
 
   const handleClose = () => {
+    playClickSound();
     router.back();
   };
 
   const handleSelectAvatar = (avatarId: number) => {
+    playClickSound();
     setProfilePicture(avatarId);
     setShowAvatarPicker(false);
   };
@@ -335,7 +357,10 @@ export default function ProfileSettingsScreen() {
                   />
                   <PressableScale
                     style={s.camBtn}
-                    onPress={() => setShowAvatarPicker(true)}
+                    onPress={() => {
+                      playClickSound();
+                      setShowAvatarPicker(true);
+                    }}
                   >
                     <Image
                       source={A.cam}
@@ -479,7 +504,10 @@ export default function ProfileSettingsScreen() {
                   ))}
                 </View>
 
-                <PressableScale onPress={() => setShowAvatarPicker(false)}>
+                <PressableScale onPress={() => {
+                  playClickSound();
+                  setShowAvatarPicker(false);
+                }}>
                   <ImageBackground
                     source={A.pillRed}
                     resizeMode="stretch"

@@ -2,7 +2,8 @@ import { HamburgerMenu } from "@/components/HamburgerMenu";
 import PrivacyModal from "@/components/PrivacyModal";
 import TermsModal from "@/components/TermsModal";
 import { useAuth } from "@/context/AuthContext";
-import { Link, useRouter } from "expo-router";
+import { Audio } from "expo-av";
+import { useRouter } from "expo-router";
 import { useRef, useState } from "react"; // new
 import {
   Alert,
@@ -81,8 +82,26 @@ export default function Settings() {
     Platform.OS === "web" && width >= 768
       ? ({ imageRendering: "pixelated" } as any)
       : undefined;
+  const clickSoundRef = useRef<Audio.Sound | null>(null);
+  const playClickSound = async () => {
+    try {
+      if (clickSoundRef.current) {
+        await clickSoundRef.current.stopAsync();
+        await clickSoundRef.current.unloadAsync();
+      }
+
+      const { sound } = await Audio.Sound.createAsync(
+        require("@/assets/music/menu-button-click.mp3"),
+        { shouldPlay: true, volume: 1 }
+      );
+      clickSoundRef.current = sound;
+    } catch (error) {
+      console.log("Error playing click sound", error);
+    }
+  };
 
   const handleSignOut = async () => {
+    playClickSound();
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -101,24 +120,34 @@ export default function Settings() {
   };
 
   const handleClose = () => {
+    playClickSound();
     router.back();
   };
 
   const handleOpenPrivacy = () => {
+    playClickSound();
     setShowPrivacyModal(true);
   }
 
   const handleClosePrivacy = () => {
+    playClickSound();
     setShowPrivacyModal(false);
   }
 
   const handleOpenTerms = () => {
+    playClickSound();
     setShowTermsModal(true);
   }
 
   const handleCloseTerms = () => {
+    playClickSound();
     setShowTermsModal(false);
   }
+  const handleOpenEditProfile = () => {
+    playClickSound();
+    router.push("/profile-settings");
+  };
+
 
 
   return (
@@ -140,9 +169,10 @@ export default function Settings() {
             </ImageBackground>
 
             {/* rows */}
-            <Link href="/profile-settings" asChild>
-              <PressableScale><Row icon={A.icoProfile} text="edit profile" /></PressableScale>
-            </Link>
+            <PressableScale onPress={handleOpenEditProfile}>
+              <Row icon={A.icoProfile} text="edit profile" />
+            </PressableScale>
+
 
             <PressableScale onPress={handleOpenPrivacy}>
               <Row icon={A.icoPrivacy} text="privacy" />

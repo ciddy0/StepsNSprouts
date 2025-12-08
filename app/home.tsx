@@ -24,7 +24,7 @@ useEffect(() => {
     try {
       const { sound } = await Audio.Sound.createAsync(
         require("../assets/music/lofi-background-music-326931.mp3"),
-        { shouldPlay: true, isLooping: true, volume: 0.3 }
+        { shouldPlay: true, isLooping: true, volume: 0.2 }
       );
       soundRef.current = sound;
     } catch (error) {
@@ -33,7 +33,6 @@ useEffect(() => {
   };
   playHomescreenMusic();
 
-  // Cleanup: stop music when component unmounts
   return () => {
     if (soundRef.current) {
       soundRef.current.stopAsync();
@@ -51,7 +50,7 @@ const playClickSound = async () => {
 
     const { sound } = await Audio.Sound.createAsync(
       require("../assets/music/menu-button-click.mp3"),
-      { shouldPlay: true, volume: 0.8 }
+      { shouldPlay: true, volume: 1 }
     );
     clickSoundRef.current = sound;
   } catch (error) {
@@ -218,9 +217,9 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "web"
       ? { textShadow: "0px 1px 0px #F3D08C" }
       : {
-          textShadowColor: "#F3D08C",
-          textShadowOffset: { width: 0, height: 1 },
-          textShadowRadius: 0,
-        }),
+        textShadowColor: "#F3D08C",
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 0,
+      }),
   },
 });
