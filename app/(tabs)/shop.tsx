@@ -170,7 +170,7 @@ export default function ShopScreen() {
                   fontSize: 28,
                   color: '#623B2A',
                 }}>
-                  SHOP
+                  shop
                 </Text>
               </ImageBackground>
 
