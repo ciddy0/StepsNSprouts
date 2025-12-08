@@ -4,191 +4,328 @@ import { ACHIEVEMENTS } from "@/constants/achievements";
 import { useAuth } from "@/context/AuthContext";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useCallback } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  ImageBackground,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+
+export const options = { headerShown: false };
+
+const A = {
+  bg: require("../../assets/maiArt/backdrop.png"),
+  panel: require("../../assets/maiArt/panel_brown.png"),
+  longBrown: require("../../assets/maiArt/button_long_brown.png"),
+
+};
+
+const Icons = {
+  badge: require("../../assets/maiArt/badge.png"),
+  trophy: require("../../assets/maiArt/trophy.png"),
+  check: require("../../assets/maiArt/check.png"),
+};
 
 export default function AchievementsScreen() {
   const { user } = useAuth();
   const userId = user?.uid ?? null;
-  const { status, data: unlockedAchievements, error, refresh } = useAchievements(userId);
+  const { status, data: unlockedAchievements = [], error, refresh } = useAchievements(userId);
+
+  const { width } = useWindowDimensions();
+  const pixelArtWebOnly =
+    Platform.OS === "web" && width >= 768
+      ? ({ imageRendering: "pixelated" } as any)
+      : undefined;
 
   const onRefresh = useCallback(() => {
     refresh();
   }, [refresh]);
 
-  return (
-    <View style={styles.container}>
-      <HamburgerMenu />
-      <View style={styles.header}>
-        <Text style={styles.title}>Achievements</Text>
-      </View>
+  const renderContent = () => {
+    if (!userId) {
+      return <Text style={styles.message}>Sign in to view achievements.</Text>;
+    }
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {!userId ? (
-          <Text style={styles.message}>Sign in to view achievements.</Text>
-        ) : status === "loading" ? (
-          <ActivityIndicator size="large" color="#733E39" />
-        ) : status === "error" ? (
-          <Text style={styles.message}>Error loading achievements</Text>
-        ) : (
-          <View style={styles.list}>
-            {ACHIEVEMENTS.map((achievement) => {
-              const unlocked = unlockedAchievements.find(a => a.id === achievement.id);
-              const isUnlocked = !!unlocked;
+    if (status === "loading") {
+      return (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color="#623B2A" />
+          <Text style={[styles.message, { marginTop: 10 }]}>Loading achievements...</Text>
+        </View>
+      );
+    }
 
-              return (
-                <View
-                  key={achievement.id}
-                  style={[
-                    styles.card,
-                    !isUnlocked && styles.cardLocked
-                  ]}
-                >
-                  <View style={[styles.iconContainer, !isUnlocked && styles.iconLocked]}>
-                    {/* Placeholder for icon */}
-                    <View style={styles.iconPlaceholder} />
-                  </View>
-                  <View style={styles.info}>
-                    <Text style={[styles.cardTitle, !isUnlocked && styles.textLocked]}>
-                      {achievement.title}
+    if (status === "error") {
+      return <Text style={styles.message}>Error loading achievements.</Text>;
+    }
+
+    return (
+      <View style={styles.list}>
+        {ACHIEVEMENTS.map((achievement) => {
+          const unlocked = unlockedAchievements.find((a) => a.id === achievement.id);
+          const isUnlocked = !!unlocked;
+
+          return (
+            <View
+              key={achievement.id}
+              style={[styles.card, !isUnlocked && styles.cardLocked]}
+            >
+              {/* Icon */}
+              <ImageBackground
+                source={Icons.badge}
+                style={[styles.iconImage, !isUnlocked && styles.iconImageLocked]}
+                resizeMode="contain"
+              >
+                {/* Optional inner highlight or nothing */}
+              </ImageBackground>
+
+              {/* Text content */}
+              <View style={styles.info}>
+                <Text style={[styles.cardTitle, !isUnlocked && styles.textLocked]}>
+                  {achievement.title}
+                </Text>
+                <Text style={[styles.cardDesc, !isUnlocked && styles.textLocked]}>
+                  {achievement.description}
+                </Text>
+
+                <View style={styles.meta}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <Image 
+                      source={Icons.trophy}
+                      style={{ width: 18, height: 18 }}
+                      resizeMode="contain"
+                    />
+                    <Text style={[styles.reward, !isUnlocked && styles.textLocked]}>
+                      {achievement.reward.pomes} Pomes
                     </Text>
-                    <Text style={[styles.cardDesc, !isUnlocked && styles.textLocked]}>
-                      {achievement.description}
-                    </Text>
-                    <View style={styles.meta}>
-                      <Text style={[styles.reward, !isUnlocked && styles.textLocked]}>
-                        🏆 {achievement.reward.pomes} Pomes
-                      </Text>
-                      {isUnlocked && (
-                        <Text style={styles.date}>
-                          Earned: {new Date(unlocked.dateAcquired).toLocaleDateString()}
-                        </Text>
-                      )}
-                    </View>
                   </View>
                   {isUnlocked && (
-                    <View style={styles.checkMark}>
-                      <Text style={{ fontSize: 20 }}>✅</Text>
-                    </View>
+                    <Text style={styles.date}>
+                      Earned:{" "}
+                      {new Date(unlocked.dateAcquired).toLocaleDateString()}
+                    </Text>
                   )}
                 </View>
-              );
-            })}
+              </View>
+
+              {/* Checkmark */}
+              {isUnlocked && (
+                <Image
+                  source={Icons.check}
+                  style={{ width: 28, height: 28, marginLeft: 8 }}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
+  return (
+    <>
+      <HamburgerMenu />
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={{ flexGrow: 1 }}
+        // if you want pull-to-refresh, you can hook up RefreshControl here
+        // refreshControl={
+        //   <RefreshControl refreshing={status === "loading"} onRefresh={onRefresh} />
+        // }
+      >
+        <ImageBackground
+          source={A.bg}
+          resizeMode="cover"
+          style={styles.bg}
+          imageStyle={pixelArtWebOnly}
+        >
+          <View style={styles.center}>
+            <ImageBackground
+              source={A.panel}
+              resizeMode="contain"
+              style={styles.panel}
+              imageStyle={pixelArtWebOnly}
+            >
+              {/* Title */}
+                <View style={styles.titleContainer}>
+                  <ImageBackground
+                    source={A.longBrown}
+                    resizeMode="stretch"
+                    style={styles.titlePill}
+                    imageStyle={pixelArtWebOnly}
+                  >
+                    <Text style={styles.titleText}>achievements</Text>
+                  </ImageBackground>
+                </View>
+
+              <View style={styles.contentContainer}>{renderContent()}</View>
+            </ImageBackground>
           </View>
-        )}
+        </ImageBackground>
       </ScrollView>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+    titleContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  titlePill: {
+    width: 220,
+    height: 54,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  titleText: {
+    fontFamily: "PixelifySans_700",
+    fontSize: 24,
+    color: "#623B2A",
+    textAlign: "center",
+  },
+  screen: {
     flex: 1,
-    backgroundColor: '#F2F0E9',
+    backgroundColor: "#fff",
   },
-  header: {
-    paddingTop: 60,
+  bg: {
+    flex: 1,
+    width: "100%",
+    minHeight: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  center: {
+    flex: 1,
+    width: "100%",
+    maxWidth: 440,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  panel: {
+    width: 360,
+    minHeight: 680,
+    alignItems: "center",
+    paddingTop: 24,
+    paddingHorizontal: 16,
     paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: '#EAD4AA',
-    borderBottomWidth: 2,
-    borderBottomColor: '#D4B896',
-    alignItems: 'center',
   },
+
   title: {
-    fontFamily: 'PixelifySans_700',
-    fontSize: 32,
-    color: '#733E39',
+    fontFamily: "PixelifySans_700",
+    fontSize: 24,
+    color: "#623B2A",
+    textAlign: "center",
   },
-  scrollContent: {
-    padding: 20,
+  contentContainer: {
+    width: "100%",
+    alignItems: "center",
   },
   message: {
-    fontFamily: 'PixelifySans_400',
-    fontSize: 18,
-    color: '#733E39',
-    textAlign: 'center',
-    marginTop: 40,
+    fontFamily: "PixelifySans_400",
+    fontSize: 16,
+    color: "#623B2A",
+    textAlign: "center",
+  },
+  loadingWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    paddingVertical: 40,
+    gap: 4,
   },
   list: {
-    gap: 16,
+    width: "100%",
+    alignItems: "center",
+    gap: 10,
   },
   card: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#D4B896',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    width: "90%",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: "#FFE6B3", // same family as stats cards
+    borderWidth: 4,
+    borderColor: "#733E39",
+    borderRadius: 6,
   },
   cardLocked: {
-    backgroundColor: '#E0E0E0',
-    borderColor: '#CCCCCC',
-    opacity: 0.8,
+    backgroundColor: "#F6D7A3",
+    borderColor: "#C68C55",
+    opacity: 0.7,
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#FFF8E1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#FFE082',
+    width: 52,
+    height: 52,
+    borderRadius: 999,
+    backgroundColor: "#FFF4CF",
+    borderWidth: 3,
+    borderColor: "#F0C36A",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
   iconLocked: {
-    backgroundColor: '#CCCCCC',
-    borderColor: '#AAAAAA',
+    backgroundColor: "#F3CFA1",
+    borderColor: "#C1864D",
   },
-  iconPlaceholder: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+  iconInner: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    backgroundColor: "#FADFA2",
   },
   info: {
     flex: 1,
   },
   cardTitle: {
-    fontFamily: 'PixelifySans_700',
-    fontSize: 18,
-    color: '#5D4037',
-    marginBottom: 4,
+    fontFamily: "PixelifySans_700",
+    fontSize: 16,
+    color: "#623B2A",
+    marginBottom: 2,
   },
   cardDesc: {
-    fontFamily: 'PixelifySans_400',
-    fontSize: 14,
-    color: '#8D6E63',
-    marginBottom: 8,
-  },
-  textLocked: {
-    color: '#757575',
+    fontFamily: "PixelifySans_400",
+    fontSize: 13,
+    color: "#3B2A27",
+    marginBottom: 4,
   },
   meta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   reward: {
-    fontFamily: 'PixelifySans_700',
-    fontSize: 14,
-    color: '#FFA000',
+    fontFamily: "PixelifySans_700",
+    fontSize: 13,
+    color: "#B45A1F",
   },
   date: {
-    fontFamily: 'PixelifySans_400',
-    fontSize: 12,
-    color: '#8D6E63',
+    fontFamily: "PixelifySans_400",
+    fontSize: 11,
+    color: "#3B2A27",
+  },
+  textLocked: {
+    color: "#8C5B33",
   },
   checkMark: {
-    marginLeft: 10,
+    marginLeft: 8,
   },
+  iconImage: {
+  width: 52,
+  height: 52,
+  marginRight: 10,
+},
+iconImageLocked: {
+  opacity: 0.45,
+},
 });
