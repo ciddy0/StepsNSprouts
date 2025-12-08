@@ -17,9 +17,13 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 500,
     imagePath: "assets/shop/lootbox_silver.png",
     lootTable: [
-      { itemId: "cat", weight: 30 },
-      { itemId: "fountain", weight: 50 },
-      { itemId: "statue", weight: 20 }
+      { itemId: "sunflower", weight: 25 },
+      { itemId: "scarecrow", weight: 25 },
+      { itemId: "snowman", weight: 20 },
+      { itemId: "capybara", weight: 15 },
+      { itemId: "gnome", weight: 8 },
+      { itemId: "bonfire", weight: 5 },
+      { itemId: "bass", weight: 2 }
     ]
   }
 ];

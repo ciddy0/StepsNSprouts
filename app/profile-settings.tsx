@@ -529,7 +529,7 @@ const s = StyleSheet.create({
     height: 56,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   title: { fontFamily: "PixelifySans_700", fontSize: 26, color: BROWN },
 

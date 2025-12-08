@@ -6,34 +6,46 @@ export interface Decoration {
 }
 
 export const DECORATIONS: Record<string, Decoration> = {
-  "dog": {
-    id: "dog",
-    name: "Cute Dog",
-    imagePath: "../assets/no_image/png",
+  "sunflower": {
+    id: "sunflower",
+    name: "Sunflower",
+    imagePath: "../assets/items/sunflowert.png",
     rarity: "common"
   },
-  "flower1": {
-    id: "flower1",
-    name: "Red Flower",
-    imagePath: "../assets/no_image/png",
+  "scarecrow": {
+    id: "scarecrow",
+    name: "Scarecrow",
+    imagePath: "../assets/items/scarescrow.png",
     rarity: "common"
   },
-  "cat": {
-    id: "cat",
-    name: "Sleepy Cat",
-    imagePath: "../assets/no_image/png",
+  "snowman": {
+    id: "snowman",
+    name: "Snowman",
+    imagePath: "../assets/items/Snowmant.png",
     rarity: "uncommon"
   },
-  "fountain": {
-    id: "fountain",
-    name: "Magic Fountain",
-    imagePath: "../assets/no_image/png",
+  "capybara": {
+    id: "capybara",
+    name: "Capybara",
+    imagePath: "../assets/items/capybara.png",
+    rarity: "uncommon"
+  },
+  "gnome": {
+    id: "gnome",
+    name: "Garden Gnome",
+    imagePath: "../assets/items/gnome.png",
     rarity: "rare"
   },
-  "statue": {
-    id: "statue",
-    name: "Garden Statue",
-    imagePath: "../assets/no_image/png",
+  "bonfire": {
+    id: "bonfire",
+    name: "Bonfire",
+    imagePath: "../assets/items/bonfiret.png",
+    rarity: "rare"
+  },
+  "bass": {
+    id: "bass",
+    name: "Bass Fish",
+    imagePath: "../assets/items/basst.png",
     rarity: "epic"
   }
 };
